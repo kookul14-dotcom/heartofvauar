@@ -105,11 +105,11 @@ body {
     .p1-hp { background: var(--p1-color); } 
     .p2-hp { background: var(--p2-color); }
     
-    .equip-row { display: flex; gap: 3px; margin-top: 4px; justify-content: center; height: auto; }
-    .equip-slot { width: 30px; height: 30px; background: #1a1a1a; border: 1px solid #444; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 15px; color:#555; overflow: hidden; }
+    .equip-row { display: flex; gap: 4px; margin-top: 4px; justify-content: center; align-items: center; }
+    .equip-slot { width: 28px; height: 28px; background: #1a1a1a; border: 1px solid #444; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; color:#555; overflow: hidden; }
     .equip-slot.filled { border-color: gold; background: #2a2a2a; color: white; }
-    .art-row { display: flex; gap: 3px; margin-top: 4px; justify-content: center; min-height: 28px; flex-wrap: wrap; }
-    .art-slot { width: 30px; height: 30px; font-size: 15px; cursor: help; filter: drop-shadow(0 0 2px gold); display: flex; align-items: center; justify-content: center; }
+    .art-row { display: flex; gap: 3px; margin-top: 4px; justify-content: center; align-items: center; flex-wrap: nowrap; /* 줄바꿈 금지 */ overflow-x: auto;  /* 유물이 많아지면 옆으로 스크롤 */ }
+    .art-slot { width: 28px; height: 28px; font-size: 14px; cursor: help; filter: drop-shadow(0 0 2px gold); display: flex; align-items: center; justify-content: center; }
 
     .boss-bar-wrap { height: 35px; background: #300; border-top: 2px solid red; position: relative; display: flex; align-items: center; justify-content: center; }
     .boss-hp-fill { position: absolute; left: 0; top: 0; height: 100%; background: #d32f2f; width: 100%; transition: width 0.3s; }
@@ -128,12 +128,12 @@ body {
         /* [핵심] 타일을 바닥에 붙임 (margin-top 대신 사용) */
         align-items: end;      /* 세로 정렬: 바닥 */
         align-content: end;    /* 세로 정렬: 바닥 */
-        padding-bottom: 80px;  /* 바닥에서 약간 띄우기 (도로 위치에 맞게 조절) */
+        padding-bottom: 120px;  /* 바닥에서 약간 띄우기 (도로 위치에 맞게 조절) */
         
         background-color: #111; 
         background-image: url('images/map_bg.png'); 
-        background-size: 100% 100%; 
-        background-position: center; 
+        background-size: 100% 120%; 
+        background-position: center 20%; 
         background-repeat: no-repeat;
     }
 
@@ -356,7 +356,7 @@ body {
 /* [수정] 캐릭터 배치 기준점 */
 .pawn, .obj-wrap {
     position: absolute !important;
-    bottom: 10px !important; 
+    bottom: 55px !important; 
     left: 50% !important;
     /* 기준점을 중앙으로 잡고, 이후 애니메이션은 위아래로만 작동 */
     transform: translateX(-50%) !important; 
@@ -369,8 +369,8 @@ body {
 }
 
 .pawn-img, .monster-img, .obj-wrap img {
-    width: 110px !important;
-    height: 110px !important;
+    width: 100px !important;
+    height: 100px !important;
     object-fit: contain;
     /* 핵심: translateX를 포함하지 않은 Y축 전용 애니메이션 적용 */
     animation: float-breathing 3s infinite ease-in-out;
@@ -1685,6 +1685,7 @@ Setup.renderClasses();
 </body>
 
 </html>
+
 
 
 
