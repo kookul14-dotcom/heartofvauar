@@ -76,7 +76,7 @@ body {
     /* HUD */
     #screen-game { display: none; flex-direction: column; }
     #hud { 
-        position: absolute; top: 0; left: 0; width: 100%; height: 320px; 
+        position: absolute; top: 0; left: 0; width: 100%; height: 260px; 
         background: rgba(0, 0, 0, 0.3); 
         backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
@@ -86,12 +86,12 @@ body {
 
     .top-bar { display: flex; justify-content: space-between; padding: 5px 10px; font-size: 14px; }
 
-    .p-stats-wrapper { display: flex; flex-direction: row; gap: 5px; height: 100%; }
+    .p-stats-wrapper { display: flex; flex-direction: row; gap: 4px; height: 100%; }
     .p-panel { 
         flex: 1; background: rgba(0, 0, 0, 0.5); 
-        border-radius: 5px; padding: 8px; 
+        border-radius: 5px; padding: 6px; 
         display: flex; flex-direction: column; justify-content: space-around; 
-        font-size: 13px; position: relative; 
+        font-size: 11px; position: relative; 
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .p-panel.active-turn { 
@@ -105,11 +105,11 @@ body {
     .p1-hp { background: var(--p1-color); } 
     .p2-hp { background: var(--p2-color); }
     
-    .equip-row { display: flex; gap: 6px; margin-top: 5px; justify-content: center; height: auto; }
-    .equip-slot { width: 45px; height: 45px; background: #1a1a1a; border: 1px solid #444; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 22px; color:#555; overflow: hidden; }
+    .equip-row { display: flex; gap: 3px; margin-top: 4px; justify-content: center; height: auto; }
+    .equip-slot { width: 30px; height: 30px; background: #1a1a1a; border: 1px solid #444; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 15px; color:#555; overflow: hidden; }
     .equip-slot.filled { border-color: gold; background: #2a2a2a; color: white; }
-    .art-row { display: flex; gap: 4px; margin-top: 6px; justify-content: center; min-height: 28px; flex-wrap: wrap; }
-    .art-slot { width: 40px; height: 40px; font-size: 22px; cursor: help; filter: drop-shadow(0 0 2px gold); display: flex; align-items: center; justify-content: center; }
+    .art-row { display: flex; gap: 3px; margin-top: 4px; justify-content: center; min-height: 28px; flex-wrap: wrap; }
+    .art-slot { width: 30px; height: 30px; font-size: 15px; cursor: help; filter: drop-shadow(0 0 2px gold); display: flex; align-items: center; justify-content: center; }
 
     .boss-bar-wrap { height: 35px; background: #300; border-top: 2px solid red; position: relative; display: flex; align-items: center; justify-content: center; }
     .boss-hp-fill { position: absolute; left: 0; top: 0; height: 100%; background: #d32f2f; width: 100%; transition: width 0.3s; }
@@ -128,7 +128,7 @@ body {
         /* [핵심] 타일을 바닥에 붙임 (margin-top 대신 사용) */
         align-items: end;      /* 세로 정렬: 바닥 */
         align-content: end;    /* 세로 정렬: 바닥 */
-        padding-bottom: 300px;  /* 바닥에서 약간 띄우기 (도로 위치에 맞게 조절) */
+        padding-bottom: 50px;  /* 바닥에서 약간 띄우기 (도로 위치에 맞게 조절) */
         
         background-color: #111; 
         background-image: url('images/map_bg.png'); 
@@ -241,10 +241,8 @@ body {
         z-index: 1;
         overflow: visible !important;
         
-        /* [중요] margin-top: 700px 삭제됨 */
-        /* 높이 강제 지정 (없으면 찌그러짐) */
-        height: 80px !important;
-        min-height: 80px !important;
+        height: 60px !important;
+        min-height: 60px !important;
         width: 100% !important;
         
         display: flex;
@@ -262,7 +260,7 @@ body {
         position: absolute !important; /* [핵심] 타일 흐름에서 완전히 뺌 */
         
         /* 위치 잡기: 타일 바닥 중앙 */
-        bottom: 5px !important;
+        bottom: -10px !important;
         left: 50% !important;
         transform: translateX(-50%) !important; /* 좌우 정렬만 함 (위아래 움직임 X) */
         
@@ -1558,4 +1556,5 @@ const UI = {
 Setup.renderClasses();
 </script>
 </body>
+
 </html>
