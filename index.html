@@ -128,7 +128,7 @@ body {
         /* [핵심] 타일을 바닥에 붙임 (margin-top 대신 사용) */
         align-items: end;      /* 세로 정렬: 바닥 */
         align-content: end;    /* 세로 정렬: 바닥 */
-        padding-bottom: 50px;  /* 바닥에서 약간 띄우기 (도로 위치에 맞게 조절) */
+        padding-bottom: 0px;  /* 바닥에서 약간 띄우기 (도로 위치에 맞게 조절) */
         
         background-color: #111; 
         background-image: url('images/map_bg.png'); 
@@ -139,9 +139,9 @@ body {
 
     /* Modals */
     .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
-    .modal-box { width: 95%; max-width: 600px; background: #222; border: 2px solid var(--gold); border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.8); max-height: 95%; overflow-y: auto; transition: 0.3s; }
-    .modal-title { font-family: 'Do Hyeon'; font-size: 22px; color: var(--gold); margin-bottom: 10px; }
-    .modal-msg { font-size: 14px; line-height: 1.5; color: #ddd; margin-bottom: 15px; white-space: pre-wrap; width: 100%; }
+    .modal-box { width: 90%; max-width: 600px; background: #222; border: 2px solid var(--gold); border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.8); max-height: 90%; overflow-y: auto; transition: 0.3s; }
+    .modal-title { font-family: 'Do Hyeon'; font-size: 18px; color: var(--gold); margin-bottom: 8px; }
+    .modal-msg { font-size: 12px; line-height: 1.5; color: #ddd; margin-bottom: 15px; white-space: pre-wrap; width: 100%; }
     .modal-choices { display: flex; flex-direction: column; gap: 8px; }
     .choice-btn { width: 100%; padding: 12px; background: #333; border: 1px solid #555; color: white; font-family: 'Do Hyeon'; border-radius: 6px; font-size: 15px; margin-bottom: 5px; cursor: pointer; }
     
@@ -149,8 +149,8 @@ body {
     .modal-box.boss-theme .modal-title { color: #f00; text-shadow: 0 0 5px #f00; }
 
     /* Battle Visuals */
-    .battle-scene { display: flex; justify-content: space-around; align-items: center; margin-bottom: 20px; height: 150px; position: relative; }
-    .battler-wrap { position: relative; width: 120px; height: 150px; display: flex; justify-content: center; align-items: flex-end; }
+    .battle-scene { display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px; height: 100px; position: relative; }
+    .battler-wrap { position: relative; width: 80px; height: 100px; display: flex; justify-content: center; align-items: flex-end; }
     .battler-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.2s; }
     .p1-side .battler-img { filter: drop-shadow(0 0 15px var(--p1-color)); }
     .enemy-side .battler-img { filter: drop-shadow(0 0 15px red); }
@@ -168,12 +168,12 @@ body {
 
     /* Battle Preview */
     .battle-preview-wrap { display: flex; justify-content: space-between; align-items: stretch; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 12px; margin-bottom: 15px; }
-    .preview-card { flex: 1; display: flex; flex-direction: column; align-items: center; background: #222; border: 2px solid #555; border-radius: 8px; padding: 10px; }
-    .p-img-box { width: 100px; height: 100px; margin-bottom: 10px; }
-    .stat-box { width: 100%; text-align: left; margin-top: 8px; }
-    .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding: 6px 0; font-size: 15px; }
+    .preview-card { flex: 1; display: flex; flex-direction: column; align-items: center; background: #222; border: 2px solid #555; border-radius: 7px; padding: 8px; }
+    .p-img-box { width: 80px; height: 80px; margin-bottom: 5px; }
+    .stat-box { width: 80%; text-align: left; margin-top: 5px; }
+    .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding: 3px 0; font-size: 12px; }
     .stat-label { color: #aaa; }
-    .stat-val { font-family: 'Black Han Sans', sans-serif; font-size: 18px; color: #fff; text-shadow: 1px 1px 0 #000; }
+    .stat-val { font-family: 'Black Han Sans', sans-serif; font-size: 14px; color: #fff; text-shadow: 1px 1px 0 #000; }
     .preview-flip { transform: scaleX(-1); }
 
     /* Shop UI */
@@ -1558,3 +1558,4 @@ Setup.renderClasses();
 </body>
 
 </html>
+
