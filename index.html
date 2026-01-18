@@ -128,7 +128,7 @@ body {
         /* [핵심] 타일을 바닥에 붙임 (margin-top 대신 사용) */
         align-items: end;      /* 세로 정렬: 바닥 */
         align-content: end;    /* 세로 정렬: 바닥 */
-        padding-bottom: 0px;  /* 바닥에서 약간 띄우기 (도로 위치에 맞게 조절) */
+        padding-bottom: 80px;  /* 바닥에서 약간 띄우기 (도로 위치에 맞게 조절) */
         
         background-color: #111; 
         background-image: url('images/map_bg.png'); 
@@ -321,7 +321,7 @@ body {
         position: absolute !important; /* [핵심] 타일 흐름에서 완전히 뺌 */
         
         /* 위치 잡기: 타일 바닥 중앙 */
-        bottom: -10px !important;
+        bottom: 65px !important;
         left: 50% !important;
         transform: translateX(-50%) !important; /* 좌우 정렬만 함 (위아래 움직임 X) */
         
@@ -384,7 +384,7 @@ body {
     display: block;
     position: absolute;
     left: -40px; /* 그림자 너비의 절반만큼 왼쪽으로 */
-    bottom: -5px;
+    bottom: 2px;
     width: 80px; 
     height: 15px;
     background: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 70%);
@@ -1425,24 +1425,62 @@ const Setup = {
         }
     },
     summon: () => {
-        if(State.summonCnt >= 4) return;
-        const idx = Utils.rand(0, State.cards.length-1); const card = State.cards.splice(idx, 1)[0]; State.hand.push(card); State.summonCnt++;
-        const el = document.createElement('div'); el.className = `merc-card ${card.rank}`;
-        el.innerHTML = `<div class="merc-name" style="color:${card.color}">${card.name}</div>🦶${card.move} ⚔️${card.atk}<br>🛡️${card.def} 🍀${card.luck}`;
-        document.getElementById('gacha-list').appendChild(el); document.getElementById('btn-summon').innerText = `소환 (${State.summonCnt}/4)`;
-        if(State.summonCnt === 4) {
-            document.getElementById('btn-summon').disabled = true;
-            setTimeout(() => { document.getElementById('gacha-view').style.display='none'; document.getElementById('place-view').style.display='flex'; Setup.renderHand(); }, 800);
-        }
-    },
+if(State.summonCnt >= 4) return;
+    const idx = Utils.rand(0, State.cards.length-1); 
+    const card = State.cards.splice(idx, 1)[0]; 
+    State.hand.push(card); 
+    State.summonCnt++;
+
+    // [강조 로직] 최댓값 찾기
+    const stats = { move: card.move, atk: card.atk, def: card.def, luck: card.luck };
+    const maxVal = Math.max(...Object.values(stats));
+
+    const getStatStyle = (val) => val === maxVal ? `color:${card.color}; font-weight:bold;` : `color:#fff; opacity:0.7;`;
+
+    const el = document.createElement('div'); 
+    el.className = `merc-card ${card.rank}`;
+    el.innerHTML = `
+        <div class="merc-name" style="color:${card.color}">${card.name}</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:5px;">
+            <div style="${getStatStyle(card.move)}">🦶${card.move}</div>
+            <div style="${getStatStyle(card.atk)}">⚔️${card.atk}</div>
+            <div style="${getStatStyle(card.def)}">🛡️${card.def}</div>
+            <div style="${getStatStyle(card.luck)}">🍀${card.luck}</div>
+        </div>
+    `;
+    
+    document.getElementById('gacha-list').appendChild(el); 
+    document.getElementById('btn-summon').innerText = `소환 (${State.summonCnt}/4)`;
+    
+    if(State.summonCnt === 4) {
+        document.getElementById('btn-summon').disabled = true;
+        setTimeout(() => { 
+            document.getElementById('gacha-view').style.display='none'; 
+            document.getElementById('place-view').style.display='flex'; 
+            Setup.renderHand(); 
+        }, 800);
+    }
+},
     renderHand: () => {
-        const c = document.getElementById('hand'); c.innerHTML = '';
-        State.hand.forEach(card => {
-            const d = document.createElement('div'); d.className = 'dragger'; d.id = `card-${card.id}`; d.draggable = true; d.style.borderColor = card.color;
-            d.innerHTML = `<div style="font-weight:bold; color:${card.color}; margin-bottom:3px;">${card.name}</div>🦶${card.move} ⚔️${card.atk}<br>🛡️${card.def} 🍀${card.luck}`;
-            d.ondragstart = e => e.dataTransfer.setData('cid', card.id); c.appendChild(d);
-        });
-        document.querySelectorAll('.stat-slot').forEach(slot => {
+renderHand: () => {
+    const c = document.getElementById('hand'); c.innerHTML = '';
+    State.hand.forEach(card => {
+        const maxVal = Math.max(card.move, card.atk, card.def, card.luck);
+        const getStyle = (val) => val === maxVal ? `color:${card.color}; font-weight:bold;` : `color:#fff;`;
+
+        const d = document.createElement('div'); 
+        d.className = 'dragger'; d.id = `card-${card.id}`; d.draggable = true; 
+        d.style.borderColor = card.color;
+        d.innerHTML = `
+            <div style="font-weight:bold; color:${card.color}; font-size:10px; margin-bottom:3px;">${card.name}</div>
+            <div style="font-size:9px; line-height:1.2;">
+                <span style="${getStyle(card.move)}">🦶${card.move}</span> <span style="${getStyle(card.atk)}">⚔️${card.atk}</span><br>
+                <span style="${getStyle(card.def)}">🛡️${card.def}</span> <span style="${getStyle(card.luck)}">🍀${card.luck}</span>
+            </div>
+        `;
+        d.ondragstart = e => e.dataTransfer.setData('cid', card.id); 
+        c.appendChild(d);
+    });        document.querySelectorAll('.stat-slot').forEach(slot => {
             slot.ondragover = e => e.preventDefault();
             slot.ondrop = e => {
                 const cid = e.dataTransfer.getData('cid'); const card = State.hand.find(x => x.id == cid); const type = slot.dataset.type;
@@ -1457,27 +1495,27 @@ updateSlots: () => {
     for(let k in State.slots) {
         const card = State.slots[k]; 
         const el = document.getElementById(`slot-${k}`);
-        
-        // 기존 등급 클래스 모두 제거
         el.classList.remove('filled', 'common', 'uncommon', 'rare', 'legend');
         
         if(card) {
             document.getElementById(`card-${card.id}`).classList.add('placed');
-            
-            // 1. 슬롯에 'filled' 및 '등급(rank)' 클래스 추가
             el.classList.add('filled', card.rank); 
             
             const label = {move:'이동', atk:'공격', def:'방어', luck:'운'}[k];
             
-            // 2. 소환할 때와 동일한 이름 색상 적용
+            // [강조 로직] 이 슬롯의 수치가 용병의 능력치 중 최고점인지 확인
+            const maxVal = Math.max(card.move, card.atk, card.def, card.luck);
+            const isMax = card[k] === maxVal;
+            const statColor = isMax ? card.color : "#ffffff";
+
             el.innerHTML = `
                 <span class="slot-name" style="color:${card.color}">${card.name}</span>
-                <span style="font-size:12px; color:#aaa; margin-bottom:2px;">${label}</span>
-                <span style="font-size:20px; font-weight:bold; color:white;">${card[k]}</span>
+                <span style="font-size:11px; color:#aaa; margin-bottom:2px;">${label}</span>
+                <span style="font-size:24px; font-weight:bold; color:${statColor};">${card[k]}</span>
             `;
         } else {
             const label = {move:'이동', atk:'공격', def:'방어', luck:'운'}[k];
-            el.innerHTML = `${label}<br><span>-</span>`;
+            el.innerHTML = `<div style="color:#666">${label}<br><span>-</span></div>`;
         }
     }
 },
@@ -1636,6 +1674,7 @@ Setup.renderClasses();
 </body>
 
 </html>
+
 
 
 
