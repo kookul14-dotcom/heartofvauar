@@ -1400,6 +1400,7 @@ grid.appendChild(p2El);
     }
 };
 
+/* --- Setup 객체 통합 및 오류 수정 버전 --- */
 const Setup = {
     renderClasses: () => {
         const grid = document.querySelector('.class-grid'); grid.innerHTML = '';
@@ -1412,124 +1413,134 @@ const Setup = {
     },
     selectClass: (k) => {
         const p = State.p1; State.keyStat = CLASSES[k].main; p.job = k;
-        if(k==='warrior'){ p.maxHp+=30; p.bonus.atkMax+=2; } else if(k==='knight'){ p.maxHp+=40; p.bonus.defMax+=2; } else if(k==='rogue'){ p.gold+=100; p.bonus.luckMax+=2; } else if(k==='hunter'){ p.bonus.atkMax+=1; p.bonus.moveMax+=1; } else if(k==='mage'){ p.maxHp-=20; p.bonus.atkMax+=3; } else if(k==='explorer'){ p.bonus.moveMax+=2; p.pot=2; }
+        if(k==='warrior'){ p.maxHp+=30; p.bonus.atkMax+=2; } 
+        else if(k==='knight'){ p.maxHp+=40; p.bonus.defMax+=2; } 
+        else if(k==='rogue'){ p.gold+=100; p.bonus.luckMax+=2; } 
+        else if(k==='hunter'){ p.bonus.atkMax+=1; p.bonus.moveMax+=1; } 
+        else if(k==='mage'){ p.maxHp-=20; p.bonus.atkMax+=3; } 
+        else if(k==='explorer'){ p.bonus.moveMax+=2; p.pot=2; }
         p.hp = p.maxHp;
         document.getElementById('screen-class').style.display = 'none'; document.getElementById('screen-setup').style.display = 'flex';
         document.getElementById('ui-job').innerText = CLASSES[k].n;
         const bSk = document.getElementById('btn-skill'); bSk.innerHTML = "<span style='font-size:10px; color:#aaa'>미개방</span><br>스킬"; bSk.disabled = true;
+        
+        State.cards = []; // 초기화
         for(let i=0; i<100; i++) {
             let rank = 'common', color='#ccc', stat={mv:[1,3],at:[1,4],df:[1,4],lk:[0,1]};
             let r = Math.random();
-            if(r < 0.1) { rank='legend'; color='gold'; stat={mv:[3,6], at:[8,12], df:[5,8], lk:[3,5]}; } else if(r < 0.3) { rank='rare'; color='violet'; stat={mv:[2,5], at:[5,8], df:[3,6], lk:[1,3]}; } else if(r < 0.6) { rank='uncommon'; color='skyblue'; stat={mv:[2,4], at:[3,6], df:[2,5], lk:[0,2]}; }
+            if(r < 0.1) { rank='legend'; color='gold'; stat={mv:[3,6], at:[8,12], df:[5,8], lk:[3,5]}; } 
+            else if(r < 0.3) { rank='rare'; color='violet'; stat={mv:[2,5], at:[5,8], df:[3,6], lk:[1,3]}; } 
+            else if(r < 0.6) { rank='uncommon'; color='skyblue'; stat={mv:[2,4], at:[3,6], df:[2,5], lk:[0,2]}; }
             State.cards.push({ id: i, name: Utils.randArr(FIRST_NAMES)+" "+Utils.randArr(LAST_NAMES), rank, color, move: Utils.rand(stat.mv[0], stat.mv[1]), atk: Utils.rand(stat.at[0], stat.at[1]), def: Utils.rand(stat.df[0], stat.df[1]), luck: Utils.rand(stat.lk[0], stat.lk[1]) });
         }
     },
     summon: () => {
-if(State.summonCnt >= 4) return;
-    const idx = Utils.rand(0, State.cards.length-1); 
-    const card = State.cards.splice(idx, 1)[0]; 
-    State.hand.push(card); 
-    State.summonCnt++;
+        if(State.summonCnt >= 4) return;
+        const idx = Utils.rand(0, State.cards.length-1); 
+        const card = State.cards.splice(idx, 1)[0]; 
+        State.hand.push(card); 
+        State.summonCnt++;
 
-    // [강조 로직] 최댓값 찾기
-    const stats = { move: card.move, atk: card.atk, def: card.def, luck: card.luck };
-    const maxVal = Math.max(...Object.values(stats));
+        // [강조 로직] 최댓값 찾기
+        const stats = { move: card.move, atk: card.atk, def: card.def, luck: card.luck };
+        const maxVal = Math.max(...Object.values(stats));
+        const getStyle = (val) => val === maxVal ? `color:${card.color}; font-weight:bold;` : `color:#fff; opacity:0.7;`;
 
-    const getStatStyle = (val) => val === maxVal ? `color:${card.color}; font-weight:bold;` : `color:#fff; opacity:0.7;`;
-
-    const el = document.createElement('div'); 
-    el.className = `merc-card ${card.rank}`;
-    el.innerHTML = `
-        <div class="merc-name" style="color:${card.color}">${card.name}</div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:5px;">
-            <div style="${getStatStyle(card.move)}">🦶${card.move}</div>
-            <div style="${getStatStyle(card.atk)}">⚔️${card.atk}</div>
-            <div style="${getStatStyle(card.def)}">🛡️${card.def}</div>
-            <div style="${getStatStyle(card.luck)}">🍀${card.luck}</div>
-        </div>
-    `;
-    
-    document.getElementById('gacha-list').appendChild(el); 
-    document.getElementById('btn-summon').innerText = `소환 (${State.summonCnt}/4)`;
-    
-    if(State.summonCnt === 4) {
-        document.getElementById('btn-summon').disabled = true;
-        setTimeout(() => { 
-            document.getElementById('gacha-view').style.display='none'; 
-            document.getElementById('place-view').style.display='flex'; 
-            Setup.renderHand(); 
-        }, 800);
-    }
-},
-    renderHand: () => {
-renderHand: () => {
-    const c = document.getElementById('hand'); c.innerHTML = '';
-    State.hand.forEach(card => {
-        const maxVal = Math.max(card.move, card.atk, card.def, card.luck);
-        const getStyle = (val) => val === maxVal ? `color:${card.color}; font-weight:bold;` : `color:#fff;`;
-
-        const d = document.createElement('div'); 
-        d.className = 'dragger'; d.id = `card-${card.id}`; d.draggable = true; 
-        d.style.borderColor = card.color;
-        d.innerHTML = `
-            <div style="font-weight:bold; color:${card.color}; font-size:10px; margin-bottom:3px;">${card.name}</div>
-            <div style="font-size:9px; line-height:1.2;">
-                <span style="${getStyle(card.move)}">🦶${card.move}</span> <span style="${getStyle(card.atk)}">⚔️${card.atk}</span><br>
-                <span style="${getStyle(card.def)}">🛡️${card.def}</span> <span style="${getStyle(card.luck)}">🍀${card.luck}</span>
+        const el = document.createElement('div'); 
+        el.className = `merc-card ${card.rank}`;
+        el.innerHTML = `
+            <div class="merc-name" style="color:${card.color}">${card.name}</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:5px;">
+                <div style="${getStyle(card.move)}">🦶${card.move}</div>
+                <div style="${getStyle(card.atk)}">⚔️${card.atk}</div>
+                <div style="${getStyle(card.def)}">🛡️${card.def}</div>
+                <div style="${getStyle(card.luck)}">🍀${card.luck}</div>
             </div>
         `;
-        d.ondragstart = e => e.dataTransfer.setData('cid', card.id); 
-        c.appendChild(d);
-    });        document.querySelectorAll('.stat-slot').forEach(slot => {
+        
+        document.getElementById('gacha-list').appendChild(el); 
+        document.getElementById('btn-summon').innerText = `소환 (${State.summonCnt}/4)`;
+        
+        if(State.summonCnt === 4) {
+            document.getElementById('btn-summon').disabled = true;
+            setTimeout(() => { 
+                document.getElementById('gacha-view').style.display='none'; 
+                document.getElementById('place-view').style.display='flex'; 
+                Setup.renderHand(); 
+            }, 800);
+        }
+    },
+    renderHand: () => {
+        const c = document.getElementById('hand'); c.innerHTML = '';
+        State.hand.forEach(card => {
+            const maxVal = Math.max(card.move, card.atk, card.def, card.luck);
+            const getStyle = (val) => val === maxVal ? `color:${card.color}; font-weight:bold;` : `color:#fff;`;
+
+            const d = document.createElement('div'); 
+            d.className = 'dragger'; d.id = `card-${card.id}`; d.draggable = true; 
+            d.style.borderColor = card.color;
+            d.innerHTML = `
+                <div style="font-weight:bold; color:${card.color}; font-size:10px; margin-bottom:3px;">${card.name}</div>
+                <div style="font-size:9px; line-height:1.2;">
+                    <span style="${getStyle(card.move)}">🦶${card.move}</span> <span style="${getStyle(card.atk)}">⚔️${card.atk}</span><br>
+                    <span style="${getStyle(card.def)}">🛡️${card.def}</span> <span style="${getStyle(card.luck)}">🍀${card.luck}</span>
+                </div>
+            `;
+            d.ondragstart = e => e.dataTransfer.setData('cid', card.id); 
+            c.appendChild(d);
+        });
+
+        document.querySelectorAll('.stat-slot').forEach(slot => {
             slot.ondragover = e => e.preventDefault();
             slot.ondrop = e => {
-                const cid = e.dataTransfer.getData('cid'); const card = State.hand.find(x => x.id == cid); const type = slot.dataset.type;
+                const cid = e.dataTransfer.getData('cid'); 
+                const card = State.hand.find(x => x.id == cid); 
+                const type = slot.dataset.type;
                 for(let k in State.slots) if(State.slots[k] === card) State.slots[k] = null;
-                State.slots[type] = card; Setup.updateSlots();
+                State.slots[type] = card; 
+                Setup.updateSlots();
             };
         });
     },
-updateSlots: () => {
-    document.querySelectorAll('.dragger').forEach(e => e.classList.remove('placed'));
-    
-    for(let k in State.slots) {
-        const card = State.slots[k]; 
-        const el = document.getElementById(`slot-${k}`);
-        el.classList.remove('filled', 'common', 'uncommon', 'rare', 'legend');
-        
-        if(card) {
-            document.getElementById(`card-${card.id}`).classList.add('placed');
-            el.classList.add('filled', card.rank); 
+    updateSlots: () => {
+        document.querySelectorAll('.dragger').forEach(e => e.classList.remove('placed'));
+        for(let k in State.slots) {
+            const card = State.slots[k]; 
+            const el = document.getElementById(`slot-${k}`);
+            el.classList.remove('filled', 'common', 'uncommon', 'rare', 'legend');
             
-            const label = {move:'이동', atk:'공격', def:'방어', luck:'운'}[k];
-            
-            // [강조 로직] 이 슬롯의 수치가 용병의 능력치 중 최고점인지 확인
-            const maxVal = Math.max(card.move, card.atk, card.def, card.luck);
-            const isMax = card[k] === maxVal;
-            const statColor = isMax ? card.color : "#ffffff";
+            if(card) {
+                document.getElementById(`card-${card.id}`).classList.add('placed');
+                el.classList.add('filled', card.rank); 
+                const label = {move:'이동', atk:'공격', def:'방어', luck:'운'}[k];
+                const maxVal = Math.max(card.move, card.atk, card.def, card.luck);
+                const isMax = card[k] === maxVal;
+                const statColor = isMax ? card.color : "#ffffff";
 
-            el.innerHTML = `
-                <span class="slot-name" style="color:${card.color}">${card.name}</span>
-                <span style="font-size:11px; color:#aaa; margin-bottom:2px;">${label}</span>
-                <span style="font-size:24px; font-weight:bold; color:${statColor};">${card[k]}</span>
-            `;
-        } else {
-            const label = {move:'이동', atk:'공격', def:'방어', luck:'운'}[k];
-            el.innerHTML = `<div style="color:#666">${label}<br><span>-</span></div>`;
+                el.innerHTML = `
+                    <span class="slot-name" style="color:${card.color}">${card.name}</span>
+                    <span style="font-size:11px; color:#aaa; margin-bottom:2px;">${label}</span>
+                    <span style="font-size:24px; font-weight:bold; color:${statColor};">${card[k]}</span>
+                `;
+            } else {
+                const label = {move:'이동', atk:'공격', def:'방어', luck:'운'}[k];
+                el.innerHTML = `<div style="color:#666">${label}<br><span>-</span></div>`;
+            }
         }
-    }
-},
+    },
     finish: () => {
         if(!State.slots.move || !State.slots.atk || !State.slots.def || !State.slots.luck) return alert("모든 슬롯을 채워주세요.");
         State.p1.stats = { move: State.slots.move.move, atk: State.slots.atk.atk, def: State.slots.def.def, luck: State.slots.luck.luck };
         let pool = []; for(let i=0; i<4; i++) pool.push(State.cards[Utils.rand(0, State.cards.length-1)]);
-        pool.sort((a,b) => b.atk - a.atk); const ca = pool.shift(); pool.sort((a,b) => b.def - a.def); const cd = pool.shift(); pool.sort((a,b) => b.move - a.move); const cm = pool.shift(); const cl = pool[0];
+        pool.sort((a,b) => b.atk - a.atk); const ca = pool.shift(); 
+        pool.sort((a,b) => b.def - a.def); const cd = pool.shift(); 
+        pool.sort((a,b) => b.move - a.move); const cm = pool.shift(); 
+        const cl = pool[0];
         State.p2.stats = { move: cm.move, atk: ca.atk, def: cd.def, luck: cl.luck };
         document.getElementById('screen-setup').style.display='none'; document.getElementById('screen-game').style.display='flex';
         Logic.initGame();
     }
 };
-
 const Game = {
     onSkillBtnClick: () => {
         if(State.p1.subJob) {
@@ -1674,6 +1685,7 @@ Setup.renderClasses();
 </body>
 
 </html>
+
 
 
 
