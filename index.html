@@ -269,7 +269,21 @@ body {
     .dragger.placed { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
     .slot-container { display: flex; justify-content: space-around; margin-bottom: 20px; }
     .stat-slot { width: 75px; height: 110px; background: #111; border: 2px dashed #555; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #777; font-size: 12px; position: relative; }
-    .stat-slot.filled { border-style: solid; border-color: var(--p1-color); background: #1b3a1b; color: white; animation: none; }
+    .stat-slot.filled.common { border-color: #888; background: rgba(136, 136, 136, 0.1); }
+.stat-slot.filled.uncommon { border-color: #4caf50; background: rgba(76, 175, 80, 0.15); }
+.stat-slot.filled.rare { border-color: #2196f3; background: rgba(33, 150, 243, 0.15); }
+.stat-slot.filled.legend { 
+    border-color: #ffca28; 
+    background: rgba(255, 202, 40, 0.15); 
+    box-shadow: 0 0 10px rgba(255, 202, 40, 0.3);
+    animation: legend-pulse 2s infinite; 
+}
+.stat-slot.filled .slot-name {
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
 
     /* Images */
     .img-asset { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -1437,19 +1451,36 @@ const Setup = {
             };
         });
     },
-    updateSlots: () => {
-        document.querySelectorAll('.dragger').forEach(e => e.classList.remove('placed'));
-        for(let k in State.slots) {
-            const card = State.slots[k]; const el = document.getElementById(`slot-${k}`);
-            if(card) {
-                document.getElementById(`card-${card.id}`).classList.add('placed'); el.classList.add('filled');
-                el.innerHTML = `<span style="color:${card.color};margin-bottom:5px;">${card.name}</span><span style="font-size:16px;font-weight:bold;">${card[k]}</span>`;
-            } else {
-                el.classList.remove('filled'); const label = {move:'이동',atk:'공격',def:'방어',luck:'운'}[k];
-                el.innerHTML = `${label}<br><span>-</span>`;
-            }
+updateSlots: () => {
+    document.querySelectorAll('.dragger').forEach(e => e.classList.remove('placed'));
+    
+    for(let k in State.slots) {
+        const card = State.slots[k]; 
+        const el = document.getElementById(`slot-${k}`);
+        
+        // 기존 등급 클래스 모두 제거
+        el.classList.remove('filled', 'common', 'uncommon', 'rare', 'legend');
+        
+        if(card) {
+            document.getElementById(`card-${card.id}`).classList.add('placed');
+            
+            // 1. 슬롯에 'filled' 및 '등급(rank)' 클래스 추가
+            el.classList.add('filled', card.rank); 
+            
+            const label = {move:'이동', atk:'공격', def:'방어', luck:'운'}[k];
+            
+            // 2. 소환할 때와 동일한 이름 색상 적용
+            el.innerHTML = `
+                <span class="slot-name" style="color:${card.color}">${card.name}</span>
+                <span style="font-size:12px; color:#aaa; margin-bottom:2px;">${label}</span>
+                <span style="font-size:20px; font-weight:bold; color:white;">${card[k]}</span>
+            `;
+        } else {
+            const label = {move:'이동', atk:'공격', def:'방어', luck:'운'}[k];
+            el.innerHTML = `${label}<br><span>-</span>`;
         }
-    },
+    }
+},
     finish: () => {
         if(!State.slots.move || !State.slots.atk || !State.slots.def || !State.slots.luck) return alert("모든 슬롯을 채워주세요.");
         State.p1.stats = { move: State.slots.move.move, atk: State.slots.atk.atk, def: State.slots.def.def, luck: State.slots.luck.luck };
@@ -1605,5 +1636,6 @@ Setup.renderClasses();
 </body>
 
 </html>
+
 
 
