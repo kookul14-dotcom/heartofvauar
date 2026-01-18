@@ -76,9 +76,10 @@ body {
     /* HUD */
     #screen-game { display: none; flex-direction: column; }
     #hud { 
-        position: absolute; top: 0; left: 0; width: 100%; height: 260px; 
-        background: rgba(0, 0, 0, 0.3); 
-        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+        position: absolute; top: 0; left: 0; width: 100%; 
+        height: 200px; /* 기존 260px에서 200px로 축소 */
+        background: rgba(0, 0, 0, 0.4) !important; /* 0.3에서 0.4로, 투명도 조절 */
+        backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
         display: flex; flex-direction: column; padding: 5px; 
         z-index: 50; 
@@ -88,10 +89,10 @@ body {
 
     .p-stats-wrapper { display: flex; flex-direction: row; gap: 4px; height: 100%; }
     .p-panel { 
-        flex: 1; background: rgba(0, 0, 0, 0.5); 
-        border-radius: 5px; padding: 6px; 
-        display: flex; flex-direction: column; justify-content: space-around; 
-        font-size: 11px; position: relative; 
+        flex: 1; background: rgba(0, 0, 0, 0.3); /* 패널 내부도 더 투명하게 */
+        border-radius: 5px; padding: 4px; 
+        display: flex; flex-direction: column; justify-content: center; 
+        font-size: 10px; position: relative; 
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
     .p-panel.active-turn { 
@@ -139,7 +140,10 @@ body {
 
     /* Modals */
     .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
-    .modal-box { width: 90%; max-width: 600px; background: #222; border: 2px solid var(--gold); border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 0 20px rgba(0,0,0,0.8); max-height: 90%; overflow-y: auto; transition: 0.3s; }
+    .modal-box { 
+        width: 95%; max-width: 500px; background: #222; 
+        padding: 8px; /* 여백 최소화 */
+    }
     .modal-title { font-family: 'Do Hyeon'; font-size: 18px; color: var(--gold); margin-bottom: 4px; }
     .modal-msg { font-size: 12px; line-height: 1.5; color: #ddd; margin-bottom: 15px; white-space: pre-wrap; width: 100%; }
     .modal-choices { display: flex; flex-direction: column; gap: 8px; }
@@ -167,11 +171,18 @@ body {
     .enemy-bv-fill { background: linear-gradient(90deg, #E91E63, #F48FB1); }
 
     /* Battle Preview */
-    .battle-preview-wrap { display: flex; justify-content: space-between; align-items: stretch; background: rgba(0,0,0,0.5); padding: 2px; border-radius: 12px; margin-bottom: 2px; }
-    .preview-card { flex: 1; display: flex; flex-direction: column; align-items: center; background: #222; border: 2px solid #555; border-radius: 7px; padding: 4px; }
-    .p-img-box { width: 80px; height: 80px; margin-bottom: 5px; }
-    .stat-box { width: 80%; text-align: left; margin-top: 4px; }
-    .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding: 0px 0; font-size: 12px; }
+    .battle-preview-wrap { 
+        display: flex; justify-content: space-between; 
+        padding: 2px; margin-bottom: 2px; /* 간격 제거 */
+    }
+    .preview-card { 
+        padding: 4px; /* 카드 내부 여백 축소 */
+    }
+    .p-img-box { 
+        width: 80px; height: 80px; margin-bottom: 2px; /* 이미지 크기는 유지 */
+    }
+    .stat-box { margin-top: 2px; }
+    .stat-row { padding: 0px; border-bottom: none; } /* 줄 간격 제거 */
     .stat-label { color: #aaa; font-size: 11px }
     .stat-val { font-family: 'Black Han Sans', sans-serif; font-size: 12px; color: #fff; text-shadow: 1px 1px 0 #000; }
     .preview-flip { transform: scaleX(-1); }
@@ -321,7 +332,7 @@ body {
         position: absolute !important; /* [핵심] 타일 흐름에서 완전히 뺌 */
         
         /* 위치 잡기: 타일 바닥 중앙 */
-        bottom: 20px !important;
+        bottom: 35px !important;
         left: 50% !important;
         transform: translateX(-50%) !important; /* 좌우 정렬만 함 (위아래 움직임 X) */
         
@@ -333,7 +344,7 @@ body {
         width: auto;
         height: auto;
         pointer-events: none;
-        z-index: 10;
+        z-index: 100;
         
         /* 껍데기도 움직이지 않음 */
         animation: none !important; 
@@ -438,6 +449,10 @@ body {
             height: 55px;
             font-size: 18px;
         }
+    #modal-gen .modal-box > div[style*="text-align:center"] {
+        font-size: 10px !important;
+        margin-top: 0 !important;
+    }
     }
 </style>
 </head>
@@ -1685,6 +1700,7 @@ Setup.renderClasses();
 </body>
 
 </html>
+
 
 
 
