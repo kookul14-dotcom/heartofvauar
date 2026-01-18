@@ -167,13 +167,13 @@ body {
     .enemy-bv-fill { background: linear-gradient(90deg, #E91E63, #F48FB1); }
 
     /* Battle Preview */
-    .battle-preview-wrap { display: flex; justify-content: space-between; align-items: stretch; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 12px; margin-bottom: 5px; }
-    .preview-card { flex: 1; display: flex; flex-direction: column; align-items: center; background: #222; border: 2px solid #555; border-radius: 7px; padding: 8px; }
+    .battle-preview-wrap { display: flex; justify-content: space-between; align-items: stretch; background: rgba(0,0,0,0.5); padding: 2px; border-radius: 12px; margin-bottom: 2px; }
+    .preview-card { flex: 1; display: flex; flex-direction: column; align-items: center; background: #222; border: 2px solid #555; border-radius: 7px; padding: 4px; }
     .p-img-box { width: 80px; height: 80px; margin-bottom: 5px; }
     .stat-box { width: 80%; text-align: left; margin-top: 4px; }
-    .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding: 1px 0; font-size: 12px; }
+    .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding: 0px 0; font-size: 12px; }
     .stat-label { color: #aaa; font-size: 11px }
-    .stat-val { font-family: 'Black Han Sans', sans-serif; font-size: 13px; color: #fff; text-shadow: 1px 1px 0 #000; }
+    .stat-val { font-family: 'Black Han Sans', sans-serif; font-size: 12px; color: #fff; text-shadow: 1px 1px 0 #000; }
     .preview-flip { transform: scaleX(-1); }
 
     /* Shop UI */
@@ -321,7 +321,7 @@ body {
         position: absolute !important; /* [핵심] 타일 흐름에서 완전히 뺌 */
         
         /* 위치 잡기: 타일 바닥 중앙 */
-        bottom: 65px !important;
+        bottom: 20px !important;
         left: 50% !important;
         transform: translateX(-50%) !important; /* 좌우 정렬만 함 (위아래 움직임 X) */
         
@@ -1685,6 +1685,7 @@ Setup.renderClasses();
 </body>
 
 </html>
+
 
 
 
