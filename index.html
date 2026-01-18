@@ -77,11 +77,11 @@ body {
     #screen-game { display: none; flex-direction: column; }
     #hud { 
         position: absolute; top: 0; left: 0; width: 100%; 
-        height: 200px; /* 기존 260px에서 200px로 축소 */
+        height: 180px; /* 기존 260px에서 200px로 축소 */
         background: rgba(0, 0, 0, 0.4) !important; /* 0.3에서 0.4로, 투명도 조절 */
         backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
-        display: flex; flex-direction: column; padding: 5px; 
+        display: flex; flex-direction: column; padding: 3px; 
         z-index: 50; 
     }
 
@@ -100,18 +100,17 @@ body {
         box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); 
         background: rgba(50, 50, 50, 0.6);
     }    
-    .stat-line { display: flex; justify-content: space-between; color: #bbb; margin-bottom: 4px; }
+    .stat-line { display: flex; justify-content: space-between; color: #bbb; margin-bottom: 1px; }
     .hp-wrap { width: 100%; height: 12px; background: #333; margin-bottom: 6px; border-radius: 6px; overflow: hidden; position: relative; }
     .hp-fill { height: 100%; width: 100%; transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
     .p1-hp { background: var(--p1-color); } 
     .p2-hp { background: var(--p2-color); }
     
     .equip-row { display: flex; gap: 4px; margin-top: 4px; justify-content: center; align-items: center; }
-    .equip-slot { width: 28px; height: 28px; background: #1a1a1a; border: 1px solid #444; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; color:#555; overflow: hidden; }
+    .equip-slot, .art-slot { width: 24px !important; height: 24px !important; font-size: 12px !important; flex-shrink: 0; }
     .equip-slot.filled { border-color: gold; background: #2a2a2a; color: white; }
     .art-row { display: flex; gap: 3px; margin-top: 4px; justify-content: center; align-items: center; flex-wrap: nowrap; /* 줄바꿈 금지 */ overflow-x: auto;  /* 유물이 많아지면 옆으로 스크롤 */ }
-    .art-slot { width: 28px; height: 28px; font-size: 14px; cursor: help; filter: drop-shadow(0 0 2px gold); display: flex; align-items: center; justify-content: center; }
-
+   
     .boss-bar-wrap { height: 35px; background: #300; border-top: 2px solid red; position: relative; display: flex; align-items: center; justify-content: center; }
     .boss-hp-fill { position: absolute; left: 0; top: 0; height: 100%; background: #d32f2f; width: 100%; transition: width 0.3s; }
     .boss-text { font-size: 16px; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; z-index: 5; }
@@ -171,22 +170,27 @@ body {
     .enemy-bv-fill { background: linear-gradient(90deg, #E91E63, #F48FB1); }
 
     /* Battle Preview */
-    .battle-preview-wrap { 
-        display: flex; justify-content: space-between; 
-        padding: 2px; margin-bottom: 2px; /* 간격 제거 */
-    }
-    .preview-card { 
-        padding: 4px; /* 카드 내부 여백 축소 */
-    }
-    .p-img-box { 
-        width: 80px; height: 80px; margin-bottom: 2px; /* 이미지 크기는 유지 */
-    }
-    .stat-box { margin-top: 2px; }
-    .stat-row { padding: 0px; border-bottom: none; } /* 줄 간격 제거 */
-    .stat-label { color: #aaa; font-size: 11px }
-    .stat-val { font-family: 'Black Han Sans', sans-serif; font-size: 12px; color: #fff; text-shadow: 1px 1px 0 #000; }
-    .preview-flip { transform: scaleX(-1); }
-
+    .battle-preview-wrap {
+    background: linear-gradient(180deg, rgba(40,40,40,0.9) 0%, rgba(20,20,20,0.95) 100%) !important;
+    border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 8px; padding: 10px !important;
+    gap: 10px !important;
+}
+.preview-card { 
+    background: none !important; border: none !important; padding: 0 !important; 
+}
+.preview-card .p-img-box { 
+    width: 70px !important; height: 70px !important; 
+    border: 1px solid #444; background: #111; border-radius: 4px;
+}
+/* 전투창 수치 강조 */
+.b-main-stat {
+    font-family: 'Black Han Sans'; font-size: 18px; color: #fff;
+    margin: 4px 0; text-shadow: 0 0 5px rgba(255,255,255,0.3);
+}
+.b-hp-bar { 
+    font-size: 11px; color: #ff8a80; font-weight: bold; 
+}
     /* Shop UI */
     .shop-header-gold { font-size: 20px; color: #FFD700; font-weight: bold; margin-bottom: 15px; text-align: center; background: #222; padding: 12px; border-radius: 8px; border: 1px solid #555; box-shadow: 0 4px 6px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 15; }
     .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-bottom: 10px; }
@@ -367,7 +371,7 @@ body {
 /* [수정] 캐릭터 배치 기준점 */
 .pawn, .obj-wrap {
     position: absolute !important;
-    bottom: 55px !important; 
+    bottom: 35px !important; 
     left: 50% !important;
     /* 기준점을 중앙으로 잡고, 이후 애니메이션은 위아래로만 작동 */
     transform: translateX(-50%) !important; 
@@ -1169,33 +1173,25 @@ grid.appendChild(p2El);
 
         let p1ImgKey = (atk.id === 'P1') ? (atk.subJob ? atk.subJob.id : atk.job) : 'enemy';
 
-        const previewHtml = `
-            <div class="battle-preview-wrap">
-                <div class="preview-card">
-                    <div class="p-img-box">${getImgTag(p1ImgKey, 'img-asset')}</div>
-                    <div style="color:lime; font-weight:bold; font-size:18px; margin-bottom:5px;">${atk.name}</div>
-                    <div class="stat-box">
-                        <div class="stat-row"><span class="stat-label">❤️HP</span> <span class="stat-val" style="color:#ff8a80">${atk.hp}/${atk.maxHp}</span></div>
-                        <div class="stat-row"><span class="stat-label">⚔️공</span> <span class="stat-val" style="color:#80d8ff">${sAtk.atMin}~${sAtk.atMax}</span></div>
-                        <div class="stat-row"><span class="stat-label">🛡️방</span> <span class="stat-val" style="color:#b9f6ca">${sAtk.dfMin}~${sAtk.dfMax}</span></div>
-                        <div class="stat-row"><span class="stat-label">🍀운</span> <span class="stat-val" style="color:gold">${sAtk.lkMin}~${sAtk.lkMax}</span></div>
-                    </div>
-                </div>
-                <div class="preview-card vs">VS</div>
-                <div class="preview-card">
-                    <div class="p-img-box ${needFlip?'preview-flip':''}">${getImgTag(enemyImgKey, 'img-asset', '👹')}</div>
-                    <div style="color:red; font-weight:bold; font-size:18px; margin-bottom:5px;">${name}</div>
-                    <div class="stat-box">
-                        <div class="stat-row"><span class="stat-label">❤️HP</span> <span class="stat-val" style="color:#ff8a80">${hpCur}/${hpMax}</span></div>
-                        <div class="stat-row"><span class="stat-label">⚔️공</span> <span class="stat-val" style="color:#80d8ff">${enAtkStr}</span></div> 
-                        <div class="stat-row"><span class="stat-label">🛡️방</span> <span class="stat-val" style="color:#b9f6ca">${dfMin}~${dfMax}</span></div>
-                    </div>
-                </div>
-            </div>
-            <div style="text-align:center; color:#888; font-size:14px; margin-top:5px;">
-                ${atk.isAi ? "🤖 AI가 전술 연산 중..." : "상대 정보를 확인하고 전투를 시작하세요."}
-            </div>
-        `;
+        // Logic.battle 함수 내 previewHtml 변수 부분 수정
+const previewHtml = `
+    <div class="battle-preview-wrap">
+        <div class="preview-card">
+            <div class="p-img-box">${getImgTag(p1ImgKey, 'img-asset')}</div>
+            <div style="color:#ddd; font-size:12px;">${atk.name}</div>
+            <div class="b-hp-bar">HP ${atk.hp}</div>
+            <div class="b-main-stat" style="color:#80d8ff">ATK ${sAtk.atMax}</div>
+        </div>
+        <div style="align-self:center; color:gold; font-family:'Do Hyeon'; font-size:20px;">VS</div>
+        <div class="preview-card">
+            <div class="p-img-box ${needFlip?'preview-flip':''}">${getImgTag(enemyImgKey, 'img-asset', '👹')}</div>
+            <div style="color:#ddd; font-size:12px;">${name}</div>
+            <div class="b-hp-bar">HP ${hpCur}</div>
+            <div class="b-main-stat" style="color:#b9f6ca">DEF ${dfMax}</div>
+        </div>
+    </div>
+    <div style="text-align:center; color:#777; font-size:10px; margin-top:5px;">승리 시 상대를 밀쳐냅니다.</div>
+`;
 
         const runCombat = () => {
             let combatLog = [];
@@ -1677,17 +1673,27 @@ const UI = {
 
         // --- 나머지 HUD 업데이트 로직은 동일하게 유지 ---
         const renP = (p, id) => {
-            const el = document.getElementById(id); const s = Logic.getStats(p);
-            const hpPct = Math.max(0, (p.hp/p.maxHp)*100);
-            const fmt = (total, base) => { const bonus = total - base; return bonus > 0 ? `${total}<span style="color:#00e676; font-size:10px;">(+${bonus})</span>` : `${total}`; };
-            const mvStr = `${fmt(s.mvMin, 1)}~${fmt(s.mvMax, p.stats.move)}`;
-            const atStr = `${fmt(s.atMin, 1)}~${fmt(s.atMax, p.stats.atk)}`;
-            const dfStr = `${fmt(s.dfMin, 1)}~${fmt(s.dfMax, p.stats.def)}`;
-            const lkStr = `${fmt(s.lkMin, 0)}~${fmt(s.lkMax, p.stats.luck)}`;
-            const eq = p.equip;
-            const eqHtml = p.isAi ? '' : `<div class="equip-row"><div class="equip-slot ${eq.s?'filled':''}">${eq.s ? getImgTag(eq.s.n, 'item-img', eq.s.icon) : '👟'}</div><div class="equip-slot ${eq.w?'filled':''}">${eq.w ? getImgTag(eq.w.n, 'item-img', eq.w.icon) : '⚔️'}</div><div class="equip-slot ${eq.a?'filled':''}">${eq.a ? getImgTag(eq.a.n, 'item-img', eq.a.icon) : '🛡️'}</div><div class="equip-slot ${eq.acc?'filled':''}">${eq.acc ? getImgTag(eq.acc.n, 'item-img', eq.acc.icon) : '💍'}</div></div><div class="art-row">${p.artifacts.map(a => `<div class="art-slot" title="${a.desc}">${a.icon}</div>`).join('')}</div>`;
-            el.innerHTML = `<div class="stat-line" style="color:white; font-weight:bold;">${p.name} <span style="font-size:10px">${p.hp}/${p.maxHp}</span></div><div class="hp-wrap"><div class="hp-fill ${p.id==='P1'?'p1-hp':'p2-hp'}" style="width:${hpPct}%"></div></div><div class="stat-line"><span>이동</span><span>${mvStr}</span></div><div class="stat-line"><span>공격</span><span>${atStr}</span></div><div class="stat-line"><span>방어</span><span>${dfStr}</span></div><div class="stat-line"><span>운</span><span>${lkStr}</span></div>${eqHtml}`;
-        };
+    const el = document.getElementById(id); const s = Logic.getStats(p);
+    const hpPct = Math.max(0, (p.hp/p.maxHp)*100);
+    const eq = p.equip;
+    
+    // 유저/추격자 공통 장비+유물 한 줄 레이아웃
+    const itemsHtml = `
+        <div class="equip-row">
+            <div class="equip-slot ${eq.s?'filled':''}">${eq.s ? getImgTag(eq.s.n, 'item-img', eq.s.icon) : '👟'}</div>
+            <div class="equip-slot ${eq.w?'filled':''}">${eq.w ? getImgTag(eq.w.n, 'item-img', eq.w.icon) : '⚔️'}</div>
+            <div class="equip-slot ${eq.a?'filled':''}">${eq.a ? getImgTag(eq.a.n, 'item-img', eq.a.icon) : '🛡️'}</div>
+            <div class="equip-slot ${eq.acc?'filled':''}">${eq.acc ? getImgTag(eq.acc.n, 'item-img', eq.acc.icon) : '💍'}</div>
+            ${p.artifacts ? p.artifacts.map(a => `<div class="art-slot">${a.icon}</div>`).join('') : ''}
+        </div>`;
+
+    el.innerHTML = `
+        <div class="stat-line" style="color:white; font-weight:bold;">${p.name} <span class="b-hp-bar">${p.hp}/${p.maxHp}</span></div>
+        <div class="hp-wrap"><div class="hp-fill ${p.id==='P1'?'p1-hp':'p2-hp'}" style="width:${hpPct}%"></div></div>
+        <div class="stat-line"><span>공격</span><span>${s.atMin}~${s.atMax}</span></div>
+        <div class="stat-line"><span>방어</span><span>${s.dfMin}~${s.dfMax}</span></div>
+        ${itemsHtml}`; // 장비창 무조건 표시
+};
         renP(State.p1, 'hud-p1'); renP(State.p2, 'hud-p2');
         document.getElementById('ui-gold').innerText = `${State.p1.gold} G`; document.getElementById('ui-lv').innerText = `Lv.${State.p1.lv}`; document.getElementById('ui-pot').innerText = State.p1.pot;
         const bossHpPct = (State.boss.hp / State.boss.maxHp) * 100;
@@ -1700,6 +1706,7 @@ Setup.renderClasses();
 </body>
 
 </html>
+
 
 
 
