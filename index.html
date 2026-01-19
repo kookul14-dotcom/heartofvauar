@@ -3,500 +3,198 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>RPG Board: Final Fixed</title>
+<title>RPG Board: Complete Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
-    /* --- 기본 스타일 --- */
+    /* -------------------------------------------
+       CORE STYLES & VARIABLES
+    ------------------------------------------- */
     :root {
-        --bg-color: #121212; --panel-bg: #1e1e1e; --text-color: #e0e0e0;
-        --p1-color: #4CAF50; --p2-color: #E91E63; --gold: #FFD700;
+        --bg-color: #0d1117; --panel-bg: #161b22; 
+        --text-color: #c9d1d9; --accent: #58a6ff;
+        --p1-color: #2ea043; --p2-color: #da3633; --gold: #f2cc60;
+        --common: #c9d1d9; --uncommon: #7ee787; --rare: #a371f7; --legend: #d29922;
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-body {
-    /* 기존 height: 100vh 대신 아래 코드를 사용 */
-    height: 100dvh; /* dynamic vh: 주소창을 제외한 실제 높이 */
-    margin: 0;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    background-color: #000;
-}
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+    body {
+        height: 100dvh; margin: 0; overflow: hidden;
+        display: flex; justify-content: center; background-color: #000;
+        font-family: 'Noto Sans KR', sans-serif;
+    }
+    #game-wrapper {
+        width: 100%; max-width: 600px; height: 100dvh; position: relative;
+        display: flex; flex-direction: column; background: var(--bg-color);
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
 
-#game-wrapper {
-    width: 100%;
-    max-width: 800px;
-    height: 100dvh; /* 여기도 동일하게 수정 */
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-
-    /* Animations */
-    @keyframes flash-red { 0%{box-shadow:inset 0 0 0 0 red;} 50%{box-shadow:inset 0 0 50px 20px rgba(255,0,0,0.5);} 100%{box-shadow:inset 0 0 0 0 red;} }
-    .flash-damage { animation: flash-red 0.3s linear; }
-    
-    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+    /* -------------------------------------------
+       ANIMATIONS
+    ------------------------------------------- */
+    @keyframes shake { 0%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
     .shake-anim { animation: shake 0.3s; }
-    
-    @keyframes floatUp { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-50px) scale(1.2);opacity:0} }
-    .float-text {
-        position: absolute; font-weight: bold; font-size: 16px; 
-        text-shadow: 2px 2px 0 #000;
-        animation: floatUp 1.5s forwards; z-index: 999; pointer-events: none; width: 150px; text-align: center;
-        left: 50%; transform: translateX(-50%);
-    }
-    
-    @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.7);} 70% {box-shadow: 0 0 0 10px rgba(0, 255, 255, 0);} 100% {box-shadow: 0 0 0 0 rgba(0, 255, 255, 0);} }
-    @keyframes bar-flash { 0% {filter: brightness(2);} 100% {filter: brightness(1);} }
-    @keyframes bar-shake { 0% {transform: translateX(0);} 25% {transform: translateX(-2px);} 50% {transform: translateX(2px);} 100% {transform: translateX(0);} }
-    @keyframes boss-pulse { 0% {box-shadow: inset 0 0 20px #500;} 50% {box-shadow: inset 0 0 60px #f00;} 100% {box-shadow: inset 0 0 20px #500;} }
+    @keyframes flash-red { 0%,100%{box-shadow:inset 0 0 0 0 red;} 50%{box-shadow:inset 0 0 50px 20px rgba(255,0,0,0.4);} }
+    .flash-damage { animation: flash-red 0.3s linear; }
+    @keyframes floatUp { 0%{transform:translateY(0);opacity:1} 100%{transform:translateY(-40px);opacity:0} }
+    .float-text { position: absolute; font-family:'Black Han Sans'; font-size: 16px; text-shadow: 2px 2px 0 #000; animation: floatUp 1.2s forwards; z-index: 999; pointer-events: none; width: 120px; text-align: center; left:50%; margin-left:-60px; }
+    @keyframes breath { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
 
-    /* Battle Animations */
-    @keyframes attack-thrust { 0% {transform: scale(1) translateX(0);} 50% {transform: scale(1.1) translateX(20px);} 100% {transform: scale(1) translateX(0);} }
-    @keyframes attack-thrust-enemy { 0% {transform: scaleX(-1) scale(1) translateX(0);} 50% {transform: scaleX(-1) scale(1.1) translateX(20px);} 100% {transform: scaleX(-1) scale(1) translateX(0);} }
-    .atk-anim-p1 { animation: attack-thrust 0.3s ease-in-out; }
-    .atk-anim-enemy { animation: attack-thrust-enemy 0.3s ease-in-out; }
-    .hit-anim { animation: shake 0.4s, bar-flash 0.4s; }
-
-    /* UI Structure */
+    /* -------------------------------------------
+       COMMON UI
+    ------------------------------------------- */
     .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 10; display: none; flex-direction: column; }
     .active-screen { display: flex; }
     .font-header { font-family: 'Do Hyeon', sans-serif; }
     
-    button { cursor: pointer; border: none; outline: none; transition: 0.2s; }
-    button:active { transform: scale(0.96); }
+    button { cursor: pointer; border: none; outline: none; transition: 0.1s; font-family: 'Do Hyeon'; }
+    button:active { transform: scale(0.96); filter: brightness(0.9); }
     .btn-main {
-        width: 90%; padding: 15px; font-size: 20px; border-radius: 8px;
-        background: linear-gradient(135deg, #FF9800, #FF5722);
-        color: white; font-family: 'Do Hyeon'; margin: 10px auto;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        width: 100%; padding: 14px; font-size: 18px; border-radius: 8px;
+        background: linear-gradient(135deg, #1f6feb, #1158c7);
+        color: white; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-    .btn-main:disabled { background: #555; color: #888; cursor: not-allowed; }
+    .btn-main:disabled { background: #333; color: #777; box-shadow: none; transform:none; }
 
-    /* HUD */
-    #screen-game { display: none; flex-direction: column; }
-    #hud { 
-        position: absolute; top: 0; left: 0; width: 100%; 
-        height: 180px; /* 기존 260px에서 200px로 축소 */
-        background: rgba(0, 0, 0, 0.4) !important; /* 0.3에서 0.4로, 투명도 조절 */
-        backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
-        display: flex; flex-direction: column; padding: 3px; 
-        z-index: 50; 
+    /* -------------------------------------------
+       HUD (CHAR INFO) - Mobile Optimized
+    ------------------------------------------- */
+    #hud {
+        position: absolute; top: 0; left: 0; width: 100%;
+        background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(5px);
+        border-bottom: 1px solid #30363d; padding: 5px; z-index: 50;
+        display: flex; flex-direction: column; gap: 4px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
-
-    .top-bar { display: flex; justify-content: space-between; padding: 5px 10px; font-size: 14px; }
-
-    .p-stats-wrapper { display: flex; flex-direction: row; gap: 4px; height: 100%; }
+    .top-info { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 12px; color: #8b949e; }
+    
+    .player-hud-grid { display: flex; gap: 5px; height: 120px; } /* 높이 약간 확보 */
     .p-panel { 
-        flex: 1; background: rgba(0, 0, 0, 0.3); /* 패널 내부도 더 투명하게 */
-        border-radius: 5px; padding: 4px; 
-        display: flex; flex-direction: column; justify-content: center; 
-        font-size: 10px; position: relative; 
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 6px; 
+        padding: 6px; display: flex; flex-direction: column; justify-content: space-between;
+        position: relative; transition: border-color 0.3s;
     }
-    .p-panel.active-turn { 
-        border: 2px solid rgba(255, 255, 255, 0.8); 
-        box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); 
-        background: rgba(50, 50, 50, 0.6);
-    }    
-    .stat-line { display: flex; justify-content: space-between; color: #bbb; margin-bottom: 1px; }
-    .hp-wrap { width: 100%; height: 12px; background: #333; margin-bottom: 6px; border-radius: 6px; overflow: hidden; position: relative; }
-    .hp-fill { height: 100%; width: 100%; transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); }
-    .p1-hp { background: var(--p1-color); } 
-    .p2-hp { background: var(--p2-color); }
+    .p-panel.active-turn { border: 1px solid var(--gold); box-shadow: inset 0 0 10px rgba(242, 204, 96, 0.1); }
     
-    .equip-row { display: flex; gap: 4px; margin-top: 4px; justify-content: center; align-items: center; }
-    .equip-slot, .art-slot { width: 24px !important; height: 24px !important; font-size: 12px !important; flex-shrink: 0; }
-    .equip-slot.filled { border-color: gold; background: #2a2a2a; color: white; }
-    .art-row { display: flex; gap: 3px; margin-top: 4px; justify-content: center; align-items: center; flex-wrap: nowrap; /* 줄바꿈 금지 */ overflow-x: auto;  /* 유물이 많아지면 옆으로 스크롤 */ }
-   
-    .boss-bar-wrap { height: 35px; background: #300; border-top: 2px solid red; position: relative; display: flex; align-items: center; justify-content: center; }
-    .boss-hp-fill { position: absolute; left: 0; top: 0; height: 100%; background: #d32f2f; width: 100%; transition: width 0.3s; }
-    .boss-text { font-size: 16px; color: white; font-weight: bold; text-shadow: 1px 1px 2px black; z-index: 5; }
-
-    #board-container { flex: 1; overflow-x: auto; overflow-y: hidden; background: #0a0a0a; scroll-behavior: smooth; position: relative; }
-#grid { 
-        display: grid; 
-        grid-template-columns: repeat(50, 1fr); 
-        gap: 0px; 
-        
-        height: 100%; 
-        width: 3616px; /* 맵 전체 길이 */
-        padding: 0; 
-        
-        /* [핵심] 타일을 바닥에 붙임 (margin-top 대신 사용) */
-        align-items: end;      /* 세로 정렬: 바닥 */
-        align-content: end;    /* 세로 정렬: 바닥 */
-        padding-bottom: 120px;  /* 바닥에서 약간 띄우기 (도로 위치에 맞게 조절) */
-        
-        background-color: #111; 
-        background-image: url('images/map_bg.png'); 
-        background-size: 100% 120%; 
-        background-position: center 20%; 
-        background-repeat: no-repeat;
-    }
-
-    /* Modals */
-    .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; }
-    .modal-box { 
-        width: 95%; max-width: 500px; background: #222; 
-        padding: 8px; /* 여백 최소화 */
-    }
-    .modal-title { font-family: 'Do Hyeon'; font-size: 18px; color: var(--gold); margin-bottom: 4px; }
-    .modal-msg { font-size: 12px; line-height: 1.5; color: #ddd; margin-bottom: 15px; white-space: pre-wrap; width: 100%; }
-    .modal-choices { display: flex; flex-direction: column; gap: 8px; }
-    .choice-btn { width: 100%; padding: 12px; background: #333; border: 1px solid #555; color: white; font-family: 'Do Hyeon'; border-radius: 6px; font-size: 15px; margin-bottom: 5px; cursor: pointer; }
+    .char-header { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+    .char-icon { width: 24px; height: 24px; background: #21262d; border-radius: 4px; display:flex; align-items:center; justify-content:center; font-size:16px; border: 1px solid #30363d; }
+    .char-info { display: flex; flex-direction: column; flex: 1; }
+    .char-name { font-size: 12px; font-weight: bold; color: var(--text-color); line-height: 1.1; }
+    .char-job { font-size: 10px; color: #8b949e; }
     
-    .modal-box.boss-theme { border-color: #f00; background: #1a0000; box-shadow: 0 0 30px #f00; animation: boss-pulse 2s infinite; }
-    .modal-box.boss-theme .modal-title { color: #f00; text-shadow: 0 0 5px #f00; }
+    .hp-bar-sm { width: 100%; height: 6px; background: #0d1117; border-radius: 3px; overflow: hidden; margin: 2px 0; }
+    .hp-fill-sm { height: 100%; transition: width 0.3s; }
+    
+    .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 4px; font-size: 10px; color: #c9d1d9; margin-bottom: 2px; }
+    .s-item { display: flex; align-items: center; gap: 2px; }
+    .s-val { color: var(--text-color); font-family: 'Do Hyeon'; letter-spacing: 0.5px; }
 
-    /* Battle Visuals */
-    .battle-scene { display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px; height: 100px; position: relative; }
-    .battler-wrap { position: relative; width: 80px; height: 100px; display: flex; justify-content: center; align-items: flex-end; }
-    .battler-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.2s; }
-    .p1-side .battler-img { filter: drop-shadow(0 0 15px var(--p1-color)); }
-    .enemy-side .battler-img { filter: drop-shadow(0 0 15px red); }
-    .battler-flip { transform: scaleX(-1); }
+    .equip-tray { display: flex; gap: 2px; flex-wrap: wrap; margin-top: auto; }
+    .eq-slot { width: 16px; height: 16px; background: #0d1117; border: 1px solid #30363d; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #484f58; }
+    .eq-slot.filled { border-color: #8b949e; color: #fff; }
+    .art-slot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; background:#342a08; }
 
-    .battle-visual-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #111; padding: 8px; border-radius: 8px; border: 1px solid #444; box-shadow: inset 0 0 10px #000; }
-    .bv-side { width: 45%; }
-    .bv-name { font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #eee; text-align: left; text-shadow: 1px 1px 0 #000; }
-    .bv-bar-bg { width: 100%; height: 24px; background: #222; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid #555; }
-    .bv-bar-fill { height: 100%; width: 100%; transition: width 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); box-shadow: inset 0 2px 5px rgba(255,255,255,0.2); }
-    .bv-bar-fill.hit { animation: bar-flash 0.2s, bar-shake 0.3s; }
-    .bv-bar-txt { position: absolute; top: 0; left: 0; width: 100%; height: 100%; font-size: 14px; color: white; text-align: center; line-height: 24px; font-weight: bold; text-shadow: 1px 1px 2px #000; z-index: 2; }
-    .p1-bv-fill { background: linear-gradient(90deg, #4CAF50, #81C784); }
-    .enemy-bv-fill { background: linear-gradient(90deg, #E91E63, #F48FB1); }
+    .boss-bar-wrap { height: 20px; background: #222; border: 1px solid #dba6a6; position: relative; border-radius: 4px; overflow: hidden; margin-top: 2px; }
+    .boss-hp-fill { height: 100%; background: #da3633; width: 100%; transition: width 0.3s; }
+    .boss-text { position:absolute; width:100%; text-align:center; top:0; font-size:11px; color:white; font-weight:bold; line-height:20px; text-shadow:1px 1px 1px black; }
 
-    /* Battle Preview */
-    .battle-preview-wrap {
-    display: flex; 
-    flex-direction: row !important; /* 가로 배치 강제 */
-    justify-content: space-around;
-    align-items: center;
-    background: rgba(20, 20, 20, 0.95) !important;
-    border: 1px solid rgba(255, 215, 0, 0.4);
-    border-radius: 12px;
-    padding: 8px !important; /* 내부 여백 축소 */
-    gap: 5px !important;
-}
-.preview-card { 
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px !important; /* 줄 간격 최소화 */
-}
-.preview-card .p-img-box { 
-    width: 65px !important; height: 65px !important; 
-    margin-bottom: 4px;
-}
+    /* -------------------------------------------
+       BOARD
+    ------------------------------------------- */
+    #board-container { flex: 1; overflow-x: auto; overflow-y: hidden; background: #010409; position: relative; }
+    #grid { 
+        display: grid; grid-template-columns: repeat(50, 1fr); 
+        height: 100%; width: 3200px; padding-bottom: 80px; align-items: end;
+        background: url('images/map_bg.png') center/cover no-repeat;
+    }
+    .tile { height: 60px; position: relative; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #21262d; font-size: 10px; color: #555; }
+    .tile-start { color: var(--p1-color); font-weight: bold; font-size:12px; }
+    .tile-end { color: var(--p2-color); font-weight: bold; font-size:12px; }
+    .tile-job { border-bottom: 2px solid var(--gold); background: rgba(255, 215, 0, 0.1); }
+    .tile-seal { border-bottom: 2px solid #58a6ff; }
 
-.b-main-stat {
-    font-size: 16px !important; /* 강조하되 너무 크지 않게 */
-    margin: 0 !important;
-}
+    /* Objects */
+    .pawn, .obj-wrap { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 1px; height: 1px; z-index: 20; pointer-events: none; display: flex; justify-content: center; align-items: flex-end; }
+    .pawn-img, .monster-img { width: 60px; height: 60px; object-fit: contain; animation: breath 2s infinite ease-in-out; filter: drop-shadow(0 4px 2px rgba(0,0,0,0.6)); }
 
-.vs-text {
-    font-family: 'Do Hyeon';
-    font-size: 18px;
-    color: gold;
-    margin: 0 5px;
-}
-.b-hp-bar { 
-    font-size: 11px; color: #ff8a80; font-weight: bold; 
-}
-    /* Shop UI */
-    .shop-header-gold { font-size: 20px; color: #FFD700; font-weight: bold; margin-bottom: 15px; text-align: center; background: #222; padding: 12px; border-radius: 8px; border: 1px solid #555; box-shadow: 0 4px 6px rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 15; }
-    .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-bottom: 10px; }
-    .shop-cat-header { grid-column: span 2; font-size: 16px; color: #b388ff; margin-top: 15px; margin-bottom: 5px; text-align: left; border-bottom: 2px solid #444; padding-bottom: 5px; font-family: 'Do Hyeon', sans-serif; }
-    .shop-card { background: #2a2a2a; border: 1px solid #444; border-radius: 8px; padding: 8px; display: flex; flex-direction: row; align-items: center; gap: 10px; min-height: 120px; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-    .shop-card:active { transform: scale(0.98); background: #333; }
-    .shop-icon { width: 90px; height: 90px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 50px; background: #151515; border-radius: 8px; border: 1px solid #333; padding: 0; overflow: hidden; position: relative; }
-    .shop-img { width: 100% !important; height: 100% !important; object-fit: contain; display: block; image-rendering: pixelated; }
-    .shop-right-col { flex: 1; display: flex; flex-direction: column; justify-content: space-between; height: 100%; text-align: left; min-height: 90px; }
-    .item-name { font-weight: bold; color: white; font-size: 15px; margin-bottom: 2px; line-height: 1.2; }
-    .item-stat { font-size: 12px; color: #bbb; margin-bottom: auto; line-height: 1.3; }
-    .buy-btn { width: 100%; background: linear-gradient(135deg, #FFD700, #FFA000); border: none; padding: 8px 0; border-radius: 4px; font-weight: bold; font-family: 'Do Hyeon'; font-size: 14px; cursor: pointer; color: #222; margin-top: 6px; box-shadow: 0 2px 3px rgba(0,0,0,0.3); }
-    .buy-btn:active { background: #E6C200; transform: translateY(1px); }
+    /* -------------------------------------------
+       CONTROLS
+    ------------------------------------------- */
+    #controls { background: #161b22; border-top: 1px solid #30363d; padding: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
+    .ctrl-row { display: flex; gap: 8px; height: 45px; }
+    .c-btn { flex: 1; background: #21262d; border: 1px solid #30363d; color: #c9d1d9; border-radius: 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+    .c-btn.active { border-color: var(--gold); background: #342a08; color: var(--gold); }
+    .c-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .roll-btn { background: var(--p1-color); color: white; font-size: 20px; border-radius: 6px; height: 50px; font-weight: bold; box-shadow: 0 4px 0 #1b6629; margin-bottom: 5px; }
+    .roll-btn:active { transform: translateY(4px); box-shadow: none; }
+    .roll-btn:disabled { background: #333; box-shadow: none; color: #555; }
 
-    /* Controls & Others */
-    #controls { height: 120px; background: var(--panel-bg); border-top: 2px solid #333; padding: 10px; display: flex; flex-direction: column; z-index: 20; }
-    .ctrl-row { display: flex; gap: 8px; margin-bottom: 8px; flex: 1; }
-    .c-btn { flex: 1; background: #2a2a2a; border: 1px solid #444; color: #ccc; border-radius: 6px; font-size: 12px; font-weight: bold; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.2; }
-    .c-btn:active { background: #333; }
-    .c-btn.active { border-color: gold; color: white; background: #4a3b00; box-shadow: 0 0 5px gold; }
-    .c-btn.passive { border-color: #555; background: #1a1a1a; color: #aaa; cursor: pointer; }
-    .roll-btn { width: 100%; height: 45px; background: #eee; color: black; font-family: 'Do Hyeon'; font-size: 20px; border-radius: 6px; border:none; }
-    .roll-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
-    .badge { position: absolute; top: 2px; right: 2px; background: red; color: white; font-size: 9px; width: 14px; height: 14px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-    #turn-msg { position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); padding: 5px 15px; border-radius: 20px; color: white; font-weight: bold; z-index: 50; pointer-events: none; white-space: nowrap;}
-    #doom-timer { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); color: red; font-family: 'Black Han Sans'; font-size: 24px; text-shadow: 2px 2px 0 black; z-index: 60; display: none; animation: pulse 1s infinite; }
+    /* -------------------------------------------
+       MODALS & POPUPS (Redesigned)
+    ------------------------------------------- */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; }
+    .modal-box { width: 90%; max-width: 380px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
+    
+    /* Battle Prep & Result */
+    .battle-header { text-align: center; font-size: 20px; color: var(--gold); margin-bottom: 10px; text-shadow: 0 2px 4px black; }
+    .battle-stage { display: flex; justify-content: space-between; align-items: center; background: #0d1117; padding: 10px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 10px; position: relative; }
+    .fighter-card { width: 42%; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .f-img-box { width: 64px; height: 64px; background: #21262d; border-radius: 8px; border: 2px solid #30363d; margin-bottom: 5px; position: relative; display:flex; align-items:center; justify-content:center; }
+    .f-name { font-size: 12px; font-weight: bold; color: white; margin-bottom: 2px; white-space: nowrap; }
+    .f-hp-bar { width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+    .f-hp-fill { height: 100%; width: 100%; transition: width 0.3s; }
+    .vs-badge { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #da3633; color: white; font-weight: bold; font-size: 14px; padding: 4px 8px; border-radius: 12px; border: 2px solid #0d1117; z-index: 5; }
+    
+    .stat-compare { display: grid; grid-template-columns: 1fr auto 1fr; gap: 5px; font-size: 11px; color: #8b949e; margin-top: 5px; width: 100%; }
+    .sc-val { font-family: 'Do Hyeon'; font-size: 13px; color: #c9d1d9; }
+    .sc-label { color: #58a6ff; font-weight: bold; }
+    
+    .skill-notice { grid-column: span 3; background: rgba(88, 166, 255, 0.15); border: 1px solid rgba(88, 166, 255, 0.3); border-radius: 4px; padding: 4px; margin-top: 5px; font-size: 11px; color: #58a6ff; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+    .battle-log-area { max-height: 120px; overflow-y: auto; background: #010409; border: 1px solid #30363d; border-radius: 6px; padding: 8px; font-size: 11px; color: #8b949e; margin-bottom: 10px; text-align: left; line-height: 1.4; }
+    .log-line { margin-bottom: 2px; border-bottom: 1px dashed #21262d; padding-bottom: 2px; }
+    .log-hlt { color: var(--gold); font-weight: bold; }
+    .log-dmg { color: var(--p2-color); }
 
     /* Setup & Gacha */
-    .class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; padding:20px; }
-    .class-card { background: #252525; border: 2px solid #444; border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; }
-    .class-card:hover { border-color: var(--gold); background: #333; }
-    .c-icon { font-size: 30px; margin-bottom: 5px; display: flex; justify-content: center; align-items: center; }
-    .c-name { font-size: 18px; color: white; margin-bottom: 5px; font-family: 'Do Hyeon'; }
-    .c-desc { font-size: 11px; color: #aaa; line-height: 1.4; }
-    #screen-setup { padding: 15px; }
-    .gacha-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .gacha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 20px; }
-    .merc-card { 
-    background: #1a1a1a; 
-    border: 1px solid #444; 
-    border-radius: 6px; 
-    padding: 10px; 
-    text-align: center; 
-    font-size: 11px;
-    transition: all 0.3s ease;
-}
-
-/* 등급별 텍스트 및 테두리 강조 */
-
-/* 1. 일반 (Common) */
-.merc-card.common { border-color: #888; color: #eee; }
-
-/* 2. 언커먼 (Uncommon) */
-.merc-card.uncommon { 
-    border-color: #4caf50; 
-    box-shadow: inset 0 0 10px rgba(76, 175, 80, 0.2);
-}
-.merc-card.uncommon .merc-name { color: #4caf50 !important; }
-
-/* 3. 레어 (Rare) */
-.merc-card.rare { 
-    border-color: #2196f3; 
-    box-shadow: inset 0 0 10px rgba(33, 150, 243, 0.3);
-}
-.merc-card.rare .merc-name { color: #2196f3 !important; text-shadow: 0 0 5px rgba(33, 150, 243, 0.5); }
-
-/* 4. 전설 (Legend) */
-.merc-card.legend { 
-    border-color: #ffca28; 
-    background: linear-gradient(145deg, #1a1a1a, #2a2400);
-    box-shadow: 0 0 15px rgba(255, 202, 40, 0.4), inset 0 0 10px rgba(255, 202, 40, 0.2);
-    animation: legend-pulse 2s infinite;
-}
-.merc-card.legend .merc-name { 
-    color: #ffca28 !important; 
-    text-shadow: 0 0 8px rgba(255, 202, 40, 0.6);
-    font-weight: bold;
-}
-
-/* 전설 등급 반짝임 효과 */
-@keyframes legend-pulse {
-    0% { border-color: #ffca28; }
-    50% { border-color: #fff176; }
-    100% { border-color: #ffca28; }
-}
-    .merc-name { font-family: 'Do Hyeon'; font-size: 13px; margin-bottom: 4px; color: #fff; }
-    .merc-card.legend { border-color: gold; box-shadow: 0 0 5px gold; }
-    .placement-area { flex: 1; display: none; flex-direction: column; }
-    .hand-container { display: flex; justify-content: center; gap: 10px; padding: 10px; background: #181818; border-radius: 8px; margin-bottom: 20px; min-height: 120px; border: 1px dashed #444; }
-    .dragger { width: 70px; height: 100px; background: #333; border: 1px solid #666; border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; cursor: grab; z-index: 50; text-align: center; }
-    .dragger.placed { opacity: 0.4; filter: grayscale(1); pointer-events: none; }
-    .slot-container { display: flex; justify-content: space-around; margin-bottom: 20px; }
-    .stat-slot { width: 75px; height: 110px; background: #111; border: 2px dashed #555; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #777; font-size: 12px; position: relative; }
-    .stat-slot.filled.common { border-color: #888; background: rgba(136, 136, 136, 0.1); }
-.stat-slot.filled.uncommon { border-color: #4caf50; background: rgba(76, 175, 80, 0.15); }
-.stat-slot.filled.rare { border-color: #2196f3; background: rgba(33, 150, 243, 0.15); }
-.stat-slot.filled.legend { 
-    border-color: #ffca28; 
-    background: rgba(255, 202, 40, 0.15); 
-    box-shadow: 0 0 10px rgba(255, 202, 40, 0.3);
-    animation: legend-pulse 2s infinite; 
-}
-.stat-slot.filled .slot-name {
-    font-size: 11px;
-    font-weight: bold;
-    margin-bottom: 5px;
-    display: block;
-}
-
-    /* Images */
-    .img-asset { width: 100%; height: 100%; object-fit: contain; display: block; }
-    .pawn-img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
-    .shop-img { width: 30px; height: 30px; object-fit: contain; }
-    .item-img { width: 100%; height: 100%; object-fit: contain; }
-
-    /* ------------------------------------------------------------------ */
-    /* [최종 수정] 타일 고정 / 캐릭터만 둥실둥실 / 그림자 표시 */
-    /* ------------------------------------------------------------------ */
-
-.tile, .tile-monster, .tile-end, .tile-start {
-        position: relative !important;
-        transform: none !important;
-        animation: none !important;
-        z-index: 1;
-        overflow: visible !important;
-        
-        height: 60px !important;
-        min-height: 60px !important;
-        width: 100% !important;
-        
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        
-        color: #555; 
-    }
+    .class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
+    .class-card { background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 10px; text-align: center; }
+    .class-card:hover { border-color: var(--gold); background: #292e36; }
     
-    .tile-start { color: lime; font-weight: bold; text-shadow: 1px 1px 2px black; }
-    .tile-end { color: red; font-weight: bold; text-shadow: 1px 1px 2px black; }
-
-    /* 2. 껍데기(Wrapper): 타일 레이아웃에서 '제외'시켜 공중에 띄움 (Absolute) */
-    .pawn, .obj-wrap {
-        position: absolute !important; /* [핵심] 타일 흐름에서 완전히 뺌 */
-        
-        /* 위치 잡기: 타일 바닥 중앙 */
-        bottom: 35px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important; /* 좌우 정렬만 함 (위아래 움직임 X) */
-        
-        /* 정렬 */
-        display: flex;
-        justify-content: center;
-        align-items: flex-end;
-        
-        width: auto;
-        height: auto;
-        pointer-events: none;
-        z-index: 100;
-        
-        /* 껍데기도 움직이지 않음 */
-        animation: none !important; 
-    }
-
-/* [수정] 애니메이션: 좌우 흔들림을 방지하기 위해 X축은 건드리지 않고 Y축(위아래)만 조절 */
-@keyframes float-breathing {
-    0%   { transform: translateY(0) scale(1); }
-    50%  { transform: translateY(-8px) scale(1.05); }
-    100% { transform: translateY(0) scale(1); }
-}
-
-/* [수정] 그림자 애니메이션 */
-@keyframes shadow-breathing {
-    0%   { transform: scale(1); opacity: 0.9; }
-    50%  { transform: scale(1.2); opacity: 0.5; }
-    100% { transform: scale(1); opacity: 0.9; }
-}
-
-/* [수정] 캐릭터 배치 기준점 */
-.pawn, .obj-wrap {
-    position: absolute !important;
-    bottom: 35px !important; 
-    left: 50% !important;
-    /* 기준점을 중앙으로 잡고, 이후 애니메이션은 위아래로만 작동 */
-    transform: translateX(-50%) !important; 
-    width: 1px; height: 1px;
-    display: flex; 
-    justify-content: center; 
-    align-items: flex-end;
-    z-index: 100;
-    pointer-events: none;
-}
-
-.pawn-img, .monster-img, .obj-wrap img {
-    width: 100px !important;
-    height: 100px !important;
-    object-fit: contain;
-    /* 핵심: translateX를 포함하지 않은 Y축 전용 애니메이션 적용 */
-    animation: float-breathing 3s infinite ease-in-out;
-    transform-origin: bottom center;
-    will-change: transform;
-}
-
-/* [수정] 그림자: 부모가 이미 중앙이므로 left만 50% 주면 됨 */
-.pawn::after, .obj-wrap::after {
-    content: '';
-    display: block;
-    position: absolute;
-    left: -40px; /* 그림자 너비의 절반만큼 왼쪽으로 */
-    bottom: 2px;
-    width: 80px; 
-    height: 15px;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 70%);
-    border-radius: 50%;
-    z-index: -1;
-    animation: shadow-breathing 3s infinite ease-in-out;
-}
-    /* 4. 마왕(Boss) 및 대형 몬스터 크기 보정 */
-    .tile-end .obj-wrap img { 
-        width: 180px !important; 
-        height: 180px !important; 
-    }
-    .tile-end .obj-wrap::after { 
-        width: 140px; 
-        height: 30px; 
-    }
-
-    /* 5. 엇박자 적용 (자연스러움) */
-    .tile:nth-child(even) .pawn-img,
-    .tile:nth-child(even) .obj-wrap img,
-    .tile:nth-child(even) .pawn::after,
-    .tile:nth-child(even) .obj-wrap::after {
-        animation-delay: 1s;
-    }
-/* 몬스터 이미지 공통: 크기는 JS에서 부여한 숫자로 결정됨 */
-    .monster-img {
-        object-fit: contain;
-    display: block; 
-    position: absolute !important;
-    bottom: 0;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    animation: float-breathing 3s infinite ease-in-out;
-    transform-origin: bottom center;
-    will-change: transform;
-    z-index: 20;
-}
-@media (max-width: 500px) {
-        /* 모바일에서만 바뀌어야 하는 부분만 골라서 작성 */
-        #hud { 
-    height: 130px !important; /* 최소 높이 */
-    padding: 2px 5px !important;
-}
-
-.p-panel { 
-    padding: 2px 6px !important;
-    gap: 0px !important; /* 내부 간격 제거 */
-}
-        .pawn-img, .monster-img {
-            width: 80px !important; /* 모바일에서는 캐릭터 크기를 줄임 */
-            height: 80px !important;
-        }
-        .roll-btn {
-            height: 55px;
-            font-size: 18px;
-        }
-    #modal-gen .modal-box > div[style*="text-align:center"] {
-        font-size: 10px !important;
-        margin-top: 0 !important;
-    }
-    }
+    .gacha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; width: 100%; }
+    .merc-card { background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 5px; font-size: 10px; text-align: center; }
+    .merc-card.legend { border-color: var(--legend); box-shadow: inset 0 0 5px rgba(210,153,34,0.3); }
+    .merc-card.rare { border-color: var(--rare); }
+    
+    .hand-container { display: flex; gap: 5px; padding: 10px; background: #0d1117; border: 1px dashed #30363d; border-radius: 8px; margin-bottom: 10px; min-height: 80px; overflow-x: auto; }
+    .dragger { width: 60px; height: 80px; background: #21262d; border: 1px solid #8b949e; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; cursor: grab; flex-shrink: 0; }
+    .dragger.placed { opacity: 0.3; pointer-events: none; }
+    
+    .slot-container { display: flex; justify-content: space-around; gap: 5px; margin-bottom: 10px; }
+    .stat-slot { width: 70px; height: 90px; background: #0d1117; border: 2px dashed #30363d; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #8b949e; position: relative; }
+    .stat-slot.filled { border-style: solid; background: #1f2428; }
+    .slot-label { font-size: 10px; margin-bottom: 5px; }
+    .slot-val { font-size: 18px; font-weight: bold; font-family: 'Do Hyeon'; color: white; }
+    
+    /* Modal Buttons */
+    .choice-btn { width: 100%; padding: 10px; background: #21262d; border: 1px solid #30363d; color: white; border-radius: 6px; margin-bottom: 5px; text-align: left; }
+    .choice-btn:hover { background: #30363d; }
 </style>
 </head>
 <body>
 
 <div id="game-wrapper">
-    <div id="screen-class" class="screen active-screen">
-        <h2 class="font-header" style="color:white; margin-bottom:20px;">지도자 선택</h2>
-        <div class="class-grid"></div>
+    <div id="screen-class" class="screen active-screen" style="padding:20px; overflow-y:auto;">
+        <h2 class="font-header" style="color:white; text-align:center;">지도자 선택</h2>
+        <div class="class-grid" id="class-list"></div>
     </div>
 
-    <div id="screen-setup" class="screen">
-        <div class="gacha-area" id="gacha-view">
-            <h2 class="font-header" style="color:var(--gold)">용병단 소환</h2>
-            <div class="gacha-grid" id="gacha-list"></div>
+    <div id="screen-setup" class="screen" style="padding:15px; display:none;">
+        <div id="phase-gacha" style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+            <h2 class="font-header" style="color:var(--gold); text-align:center;">용병단 소환</h2>
+            <div class="gacha-grid" id="gacha-view"></div>
             <button class="btn-main" id="btn-summon" onclick="Setup.summon()">소환 (0/4)</button>
         </div>
-        <div class="placement-area" id="place-view">
-            <div style="text-align:center; color:#888; font-size:12px; margin-bottom:10px;">
-                능력치를 드래그하여 슬롯에 배치하세요<br>
-            </div>
+        <div id="phase-place" style="flex:1; display:none; flex-direction:column;">
+            <div style="text-align:center; color:#8b949e; font-size:12px; margin-bottom:10px;">능력치를 드래그하여 슬롯에 배치하세요</div>
             <div class="hand-container" id="hand"></div>
             <div class="slot-container">
                 <div class="stat-slot" data-type="move" id="slot-move">이동<br><span>-</span></div>
@@ -504,1236 +202,766 @@ body {
                 <div class="stat-slot" data-type="def" id="slot-def">방어<br><span>-</span></div>
                 <div class="stat-slot" data-type="luck" id="slot-luck">운<br><span>-</span></div>
             </div>
-            <button class="btn-main" onclick="Setup.finish()" style="margin-top:auto;">모험 시작</button>
+            <div style="flex:1"></div>
+            <button class="btn-main" onclick="Setup.finish()">모험 시작</button>
         </div>
     </div>
 
     <div id="screen-game" class="screen">
         <div id="hud">
-            <div class="top-bar">
-                <span id="ui-job" style="font-weight:bold; color:#ddd">JOB</span>
-                <span><span id="ui-lv" style="color:#00e676; margin-right:8px;">Lv.1</span><span id="ui-gold" style="color:gold">0 G</span></span>
+            <div class="top-info">
+                <span><span style="color:var(--gold)">Lv.<span id="ui-lv">1</span></span> <span id="ui-turn" style="margin-left:8px;">Turn 1</span></span>
+                <span style="color:var(--gold)">💰 <span id="ui-gold">0</span></span>
             </div>
-            <div class="p-stats-wrapper">
-                <div class="p-panel p1-panel" id="hud-p1"></div>
-                <div class="p-panel p2-panel" id="hud-p2"></div>
+            <div class="player-hud-grid">
+                <div class="p-panel" id="p1-panel"></div>
+                <div class="p-panel" id="p2-panel"></div>
             </div>
             <div class="boss-bar-wrap">
-                <div class="boss-hp-fill" id="boss-hp-fill"></div>
-                <div class="boss-text" id="boss-hp-txt">마왕 HP: 50</div>
+                <div class="boss-hp-fill" id="boss-hp-bar"></div>
+                <div class="boss-text" id="boss-hp-text">마왕 HP</div>
             </div>
+            <div id="doom-timer" style="display:none; color:red; text-align:center; font-weight:bold; font-size:12px; margin-top:2px;">D-DAY: 5</div>
         </div>
-        
-        <div id="doom-timer"></div>
-        <div id="turn-msg">준비 중...</div>
-        
+
         <div id="board-container">
             <div id="grid"></div>
         </div>
 
         <div id="controls">
             <div class="ctrl-row">
-                <button class="c-btn active" id="btn-cam" onclick="Game.toggleCamera()">🎥시점고정</button>
-                
-                <button class="c-btn" id="btn-skill" onclick="Game.onSkillBtnClick()">스킬</button>
-                <button class="c-btn" onclick="Game.usePotion()">🧪물약<div class="badge" id="ui-pot">0</div></button>
-                <button class="c-btn" onclick="Shop.open()">🛒상점</button>
+                <button class="c-btn active" id="btn-cam" onclick="Game.toggleCamera()">🎥<br>고정</button>
+                <button class="c-btn" id="btn-skill" onclick="Game.onSkillBtnClick()">⚡<br>스킬</button>
+                <button class="c-btn" onclick="Game.usePotion()">🧪<br>물약 <span id="ui-pot" style="color:var(--gold)">0</span></button>
+                <button class="c-btn" onclick="Shop.open()">🛒<br>상점</button>
             </div>
             <button class="roll-btn" id="btn-roll" onclick="Game.roll(false)">주사위 굴리기</button>
         </div>
     </div>
 
     <div id="modal-gen" class="modal-overlay">
-        <div class="modal-box" id="modal-box-gen">
-            <div id="m-title" class="modal-title"></div>
-            <div id="m-msg" class="modal-msg"></div>
-            <div id="m-choices" class="modal-choices"></div>
-            <button id="m-ok" class="choice-btn" style="margin-top:10px; background:#444;">확인</button>
-        </div>
+        <div class="modal-box" id="modal-content"></div>
     </div>
-
+    
     <div id="modal-shop" class="modal-overlay">
-        <div class="modal-box" style="border-color:#448aff; width:95%; max-width:600px;">
-            <div class="modal-title" style="color:#448aff;">🛒 만물상</div>
-            <div id="shop-items" style="max-height:400px; overflow-y:auto;"></div>
-            <button class="choice-btn" onclick="Shop.close()" style="margin-top:10px;">닫기</button>
-        </div>
-    </div>
-
-    <div id="modal-end" class="modal-overlay">
-        <div class="modal-box" style="border-color:white;">
-            <div id="end-title" class="modal-title" style="font-size:32px;">VICTORY</div>
-            <div id="end-content" style="text-align:left; background:#111; padding:10px; margin-bottom:15px; border-radius:5px;"></div>
-            <button class="choice-btn" style="background:gold; color:black; font-weight:bold;" onclick="location.reload()">다시 시작</button>
+        <div class="modal-box" style="height:70%; max-width:400px;">
+            <div class="battle-header">🛒 만물상</div>
+            <div id="shop-list" style="flex:1; overflow-y:auto;"></div>
+            <button class="btn-main" onclick="Shop.close()" style="margin-bottom:0; padding:10px;">나가기</button>
         </div>
     </div>
 </div>
 
 <script>
-/* --- Config & Data --- */
-const IMG_SRC = {
-    // 1차 직업
-    warrior: 'images/warrior.png',
-    knight: 'images/knight.png',
-    rogue: 'images/rogue.png',
-    hunter: 'images/hunter.png',
-    mage: 'images/mage.png',
-    explorer: 'images/explorer.png',
-    
-    // 2차 전직
-    berserker: 'images/berserker.png',
-    paladin: 'images/paladin.png',
-    guardian: 'images/guardian.png',
-    avenger: 'images/avenger.png',
-    assassin: 'images/assassin.png',
-    phantom: 'images/phantom.png',
-    sniper: 'images/sniper.png',
-    ranger: 'images/ranger.png',
-    archmage: 'images/archmage.png',
-    warlock: 'images/warlock.png',
-    alchemist: 'images/alchemist.png',
-    pathfinder: 'images/pathfinder.png',
-
-    // 몬스터
-    '슬라임': 'images/slime.png',
-    '고블린': 'images/goblin.png',
-    '오크': 'images/orc.png',
-    '스켈레톤': 'images/skeleton.png',
-    '좀비': 'images/zombie.png',
-    '트롤': 'images/troll.png',
-    '골렘': 'images/golem.png',
-    '가고일': 'images/gargoyle.png',
-    '리치': 'images/lich.png',
-    '드래곤': 'images/dragon.png',
-    
-    // 특수
-    boss: 'images/boss.png',
-    enemy: 'images/enemy.png',
-    
-    // 아이템
-    '가죽 부츠': 'images/boots_leather.png',
-    '바람의 신발': 'images/boots_wind.png',
-    '헤르메스 부츠': 'images/boots_hermes.png',
-    '녹슨 검': 'images/sword_rusty.png',
-    '기사의 검': 'images/sword_knight.png',
-    '마법 지팡이': 'images/staff_magic.png',
-    '미스릴 검': 'images/sword_mithril.png',
-    '가죽 갑옷': 'images/armor_leather.png',
-    '판금 갑옷': 'images/armor_plate.png',
-    '용의 비늘': 'images/armor_dragon.png',
-    '성기사의 방패': 'images/shield_paladin.png',
-    '행운 부적': 'images/acc_charm.png',
-    '황금 반지': 'images/acc_goldring.png',
-
-    // 타일
-    tile_fire: 'images/tile_fire.png',
-    tile_ice: 'images/tile_ice.png',
-    tile_event: 'images/tile_event.png',
-    tile_seal: 'images/tile_seal.png',
-    tile_heal: 'images/tile_heal.png',
-    tile_job: 'images/tile_job.png',
-
-    // 유물
-    vamp: 'images/art_vamp.png',
-    thorn: 'images/art_thorn.png',
-    greed: 'images/art_greed.png',
-    glass: 'images/art_glass.png',
-    boots: 'images/art_boots.png',
-    lucky: 'images/art_lucky.png',
-
-    // 스킬
-    skill_fury: 'images/skill_fury.png',
-    skill_divine: 'images/skill_divine.png',
-    skill_iron: 'images/skill_iron.png',
-    skill_revenge: 'images/skill_revenge.png',
-    skill_vital: 'images/skill_vital.png',
-    skill_shadow: 'images/skill_shadow.png',
-    skill_weakness: 'images/skill_weakness.png',
-    skill_wind: 'images/skill_wind.png',
-    skill_meteor: 'images/skill_meteor.png',
-    skill_soul: 'images/skill_soul.png',
-    skill_poison: 'images/skill_poison.png',
-    skill_shortcut: 'images/skill_shortcut.png'
-};
-
-const getImgTag = (key, altClass='', fallbackEmoji='') => {
-    if(IMG_SRC[key]) return `<img src="${IMG_SRC[key]}" class="${altClass}" onerror="this.style.display='none';this.parentNode.innerText='${fallbackEmoji}'">`;
-    return fallbackEmoji;
+/* ------------------------------------------------------------------
+   CONSTANTS & DATA
+------------------------------------------------------------------ */
+const IMG = {
+    warrior:'⚔️', knight:'🛡️', rogue:'🗡️', hunter:'🏹', mage:'🔮', explorer:'🧭',
+    berserker:'🩸', paladin:'⛪', guardian:'🏰', avenger:'💢', assassin:'👻', phantom:'🌫️', sniper:'🎯', ranger:'🍃', archmage:'⚡', warlock:'💀', alchemist:'⚗️', pathfinder:'🗺️',
+    monster:'👹', boss:'👿', enemy:'👺'
 };
 
 const CLASSES = {
-    warrior: {n:'전사', desc:'체력+30, 공격+2', i:'⚔️', main:'atk'},
-    knight: {n:'기사', desc:'체력+40, 방어+2', i:'🛡️', main:'def'},
-    rogue: {n:'도적', desc:'골드+100, 운+2', i:'🍀', main:'luck'},
-    hunter: {n:'사냥꾼', desc:'공격/이동+1', i:'🏹', main:'atk'},
-    mage: {n:'마법사', desc:'체력-20, 공격+3', i:'🔮', main:'atk'},
-    explorer: {n:'탐험가', desc:'이동+2, 물약 2개', i:'🦶', main:'move'}
+    warrior: {n:'전사', desc:'체력+30, 공격+2', main:'atk'},
+    knight: {n:'기사', desc:'체력+40, 방어+2', main:'def'},
+    rogue: {n:'도적', desc:'골드+100, 운+2', main:'luck'},
+    hunter: {n:'사냥꾼', desc:'공격+1, 이동+1', main:'atk'},
+    mage: {n:'마법사', desc:'체력-20, 공격+3', main:'atk'},
+    explorer: {n:'탐험가', desc:'이동+2, 물약+2', main:'move'}
 };
 
 const JOBS = {
-    warrior: [
-        {id:'berserker', n:'광전사', sn:'피의 격노', desc:'[패시브] HP 26 이상 시, HP 25 소모하여 공격력 2배', i:'🩸', type:'passive'},
-        {id:'paladin', n:'성기사', sn:'신의 가호', desc:'[패시브] 매 턴 시작 시 최대 체력(MaxHP)의 10%만큼 회복', i:'⛪', type:'passive'}
-    ],
-    knight: [
-        {id:'guardian', n:'가디언', sn:'철벽 방어', desc:'[패시브] 전투 반동 및 모든 피격 데미지 -3 감소', i:'🏰', type:'passive'},
-        {id:'avenger', n:'어벤져', sn:'복수의 칼날', desc:'[패시브] 방어 시, 내 방어력 수치만큼 적에게 확정 반사', i:'⚔️', type:'passive'}
-    ],
-    rogue: [
-        {id:'assassin', n:'어쌔신', sn:'급소 가격', desc:'[패시브] 공격 시, 현재 운(Luck) 수치의 2배만큼 공격력 추가', i:'🗡️', type:'passive'},
-        {id:'phantom', n:'팬텀', sn:'그림자 망토', desc:'[패시브] 피격 시 30% 확률로 완전 회피', i:'👻', type:'passive'}
-    ],
-    hunter: [
-        {id:'sniper', n:'스나이퍼', sn:'약점 포착', desc:'[패시브] 적 방어력을 50%만 적용 (방어 관통)', i:'🎯', type:'passive'},
-        {id:'ranger', n:'레인저', sn:'바람의 사격', desc:'[패시브] 이동한 칸 수만큼 공격력 추가', i:'🌪️', type:'passive'}
-    ],
-    mage: [
-        {id:'archmage', n:'대마법사', sn:'메테오 스트라이크', desc:'[액티브] 쿨타임 3턴. 다음 전투 고정 피해 20 (클릭 시 사용)', i:'⚡', type:'active'},
-        {id:'warlock', n:'흑마법사', sn:'영혼 착취', desc:'[패시브] 50G 소모하여 추가 피해 +15', i:'💀', type:'passive'}
-    ],
-    explorer: [
-        {id:'alchemist', n:'연금술사', sn:'독성 투척', desc:'[패시브] 물약 사용 시 체력 회복 + 적에게 10 독 데미지', i:'⚗️', type:'passive'},
-        {id:'pathfinder', n:'개척자', sn:'지름길 발견', desc:'[패시브] 이동 주사위 굴림 시 최소값 4 보장', i:'🧭', type:'passive'}
-    ]
+    warrior: [ {id:'berserker', n:'광전사', sn:'피의 격노', desc:'HP 소모하여 공격력 2배', type:'passive'}, {id:'paladin', n:'성기사', sn:'신의 가호', desc:'매 턴 체력 회복', type:'passive'} ],
+    knight: [ {id:'guardian', n:'가디언', sn:'철벽 방어', desc:'받는 피해 -3', type:'passive'}, {id:'avenger', n:'어벤져', sn:'복수의 칼날', desc:'방어시 데미지 반사', type:'passive'} ],
+    rogue: [ {id:'assassin', n:'어쌔신', sn:'급소 가격', desc:'운 수치만큼 공격력 추가', type:'passive'}, {id:'phantom', n:'팬텀', sn:'그림자 망토', desc:'30% 확률로 완전 회피', type:'passive'} ],
+    hunter: [ {id:'sniper', n:'스나이퍼', sn:'약점 포착', desc:'방어력 50% 관통', type:'passive'}, {id:'ranger', n:'레인저', sn:'바람의 사격', desc:'이동거리만큼 공격력 추가', type:'passive'} ],
+    mage: [ {id:'archmage', n:'대마법사', sn:'메테오', desc:'고정 피해 20 (쿨타임 3)', type:'active', cd:3}, {id:'warlock', n:'흑마법사', sn:'영혼 착취', desc:'골드 소모 추가 피해', type:'passive'} ],
+    explorer: [ {id:'alchemist', n:'연금술사', sn:'독성 투척', desc:'물약 사용 시 적에게 독뎀', type:'passive'}, {id:'pathfinder', n:'개척자', sn:'지름길', desc:'이동 최소값 4 보장', type:'passive'} ]
 };
 
-const ITEMS_DB = [
-    {n:"가죽 부츠", type:"s", val:1, cost:50, desc:"이동+1", icon:"👟", rank:0},
-    {n:"바람의 신발", type:"s", val:2, cost:100, desc:"이동+2", icon:"👟", rank:1},
-    {n:"헤르메스 부츠", type:"s", val:4, cost:220, desc:"이동+4", icon:"👟", rank:3},
-    {n:"녹슨 검", type:"w", val:2, cost:50, desc:"공격+2", icon:"⚔️", rank:0},
-    {n:"기사의 검", type:"w", val:4, cost:120, desc:"공격+4", icon:"⚔️", rank:1},
-    {n:"마법 지팡이", type:"w", val:6, cost:200, desc:"공격+6", icon:"🔮", rank:2},
-    {n:"미스릴 검", type:"w", val:7, cost:250, desc:"공격+7", icon:"⚔️", rank:3},
-    {n:"가죽 갑옷", type:"a", val:2, cost:50, desc:"방어+2", icon:"🛡️", rank:0},
-    {n:"판금 갑옷", type:"a", val:4, cost:120, desc:"방어+4", icon:"🛡️", rank:1},
-    {n:"용의 비늘", type:"a", val:6, cost:200, desc:"방어+6", icon:"🛡️", rank:2},
-    {n:"성기사의 방패", type:"a", val:8, cost:300, desc:"방어+8", icon:"🛡️", rank:3},
-    {n:"행운 부적", type:"acc", val:2, cost:80, desc:"운+2", icon:"💍", rank:1},
-    {n:"황금 반지", type:"acc", val:4, cost:150, desc:"운+4", icon:"💍", rank:2}
+const ITEMS = [
+    {n:"가죽 부츠", type:"s", val:1, cost:50, icon:"👟", rank:0}, {n:"바람의 신발", type:"s", val:2, cost:100, icon:"👟", rank:1}, {n:"헤르메스 부츠", type:"s", val:4, cost:220, icon:"👟", rank:2},
+    {n:"녹슨 검", type:"w", val:2, cost:50, icon:"⚔️", rank:0}, {n:"기사의 검", type:"w", val:4, cost:120, icon:"⚔️", rank:1}, {n:"마법 지팡이", type:"w", val:6, cost:200, icon:"🔮", rank:2},
+    {n:"가죽 갑옷", type:"a", val:2, cost:50, icon:"🛡️", rank:0}, {n:"판금 갑옷", type:"a", val:4, cost:120, icon:"🛡️", rank:1}, {n:"성기사의 방패", type:"a", val:8, cost:300, icon:"🛡️", rank:2},
+    {n:"행운 부적", type:"acc", val:2, cost:80, icon:"💍", rank:1}, {n:"황금 반지", type:"acc", val:4, cost:150, icon:"💍", rank:2}
 ];
 
 const ARTIFACTS = [
-    {id:'vamp', n:'🩸 흡혈의 괭이', desc:'공격 시 체력 5 회복', icon:'🩸'},
-    {id:'thorn', n:'🌵 가시 갑옷', desc:'피격 시 적에게 5 데미지 반사', icon:'🌵'},
-    {id:'greed', n:'💰 탐욕의 항아리', desc:'매 턴 골드 획득 2배', icon:'💰'},
-    {id:'glass', n:'🍷 유리 대포', desc:'공격력 +5, 받는 피해 +5', icon:'🍷'},
-    {id:'boots', n:'👞 헤르메스의 날개', desc:'이동 주사위 +1', icon:'👞'},
-    {id:'lucky', n:'🍀 네잎클로버', desc:'운(Luck) +2', icon:'🍀'}
+    {id:'vamp', n:'흡혈의 괭이', desc:'공격 시 HP 5 회복', icon:'🩸'},
+    {id:'thorn', n:'가시 갑옷', desc:'피격 시 5 반사', icon:'🌵'},
+    {id:'greed', n:'탐욕의 항아리', desc:'골드 획득 2배', icon:'💰'},
+    {id:'glass', n:'유리 대포', desc:'공격+5, 피격+5', icon:'🍷'},
+    {id:'boots', n:'헤르메스 날개', desc:'이동+1', icon:'👞'},
+    {id:'lucky', n:'네잎클로버', desc:'운+2', icon:'🍀'}
 ];
 
 const MONSTERS = ["슬라임","고블린","오크","스켈레톤","좀비","트롤","골렘","가고일","리치","드래곤"];
-const MON_STATS = [ {mn:1,mx:5},{mn:2,mx:7},{mn:3,mx:9},{mn:3,mx:11},{mn:3,mx:13},{mn:4,mx:13},{mn:4,mx:15},{mn:4,mx:17},{mn:4,mx:19},{mn:5,mx:20} ];
-const MON_SIZES = [
-    {w:50, h:50}, {w:60, h:60}, {w:110, h:110}, {w:70, h:90}, {w:75, h:75}, 
-    {w:110, h:100}, {w:180, h:180}, {w:100, h:100}, {w:100, h:130}, {w:200, h:200}
-];
+const MON_STATS = [ {mn:1,mx:5},{mn:2,mx:7},{mn:3,mx:9},{mn:3,mx:11},{mn:3,mx:13},{mn:4,mx:15},{mn:4,mx:17},{mn:5,mx:19},{mn:6,mx:22},{mn:8,mx:25} ];
 
-const FIRST_NAMES = ["가웨인","가브리엘","그레이","기드온","갈리오","그웬","나탈리","녹스","니코","노아","네로","다리우스","단테","델라","도리안","드레이크","디안","라스","라칸","레오","레이븐","렉스","로건","루나","루크","리안","릴리","레온","로제","마그누스","메이","미라","미카엘","말콤","바론","발트","베릭","벨라","비오","빅터","빈센트","사라","세라","세실","소라","솔","시온","실비아","세인","아론","아벨","아이작","알렌","알릭","에반","에실라","에이든","엘리","엘릭","오웬","요한","이리스","이안","자크","제드","제라드","제이","제키","조이","진","지크","카엘","카이","칼","케인","클라우드","키라","크리스","타이탄","테오","트리스","파비안","펜","펠릭스","포드","프레이","핀","하울","한스","헥터","헬가","휴고"];
-const LAST_NAMES = ["그린","그레이","골드","나이트","다크","라이트","레드","리버","레인","문","블랙","블루","블레이드","브라운","스노우","스톰","스톤","스틸","스타","실버","애쉬","오션","우드","윈드","워터","클라우드","프로스트","파이어","화이트","힐","가드","나이트","드리머","레전드","로열","마스터","메이커","베어","보우","쉐도우","세이버","솔져","스트라이크","실드","아이","울프","워커","위스퍼","체이서","크로스","킹","파이터","팬텀","폭스","해머","헌터","호크","하트"];
-
+/* ------------------------------------------------------------------
+   STATE
+------------------------------------------------------------------ */
 let State = {
-    cameraLocked: true,
-    p1: { id:'P1', name:'나', job:'warrior', subJob:null, pos:0, hp:100, maxHp:100, gold:0, pot:1, exp:0, maxExp:50, lv:1, stats:{move:5, atk:5, def:5, luck:2}, bonus:{moveMin:0,moveMax:0,atkMin:0,atkMax:0,defMin:0,defMax:0,luckMin:0,luckMax:0}, skillCD: 0, equip: { s:null, w:null, a:null, acc:null }, isAi:false, artifacts: [], movedSteps: 0 },
-    p2: { id:'P2', name:'추격자', pos:0, hp:100, maxHp:100, gold:0, pot:1, stats:{move:5, atk:5, def:5, luck:2}, bonus:{moveMin:0,moveMax:0,atkMin:0,atkMax:0,defMin:0,defMax:0,luckMin:0,luckMax:0}, equip:{s:null, w:null, a:null, acc:null}, isAi:true },
+    p1: { id:'P1', name:'나', job:'warrior', subJob:null, pos:0, hp:100, maxHp:100, gold:0, pot:1, stats:{move:5, atk:5, def:5, luck:2}, bonus:{moveMin:0,moveMax:0,atkMin:0,atkMax:0,defMin:0,defMax:0,luckMin:0,luckMax:0}, equip:{s:null,w:null,a:null,acc:null}, artifacts:[], activeSkill:false, skillCD:0, movedSteps:0 },
+    p2: { id:'P2', name:'추격자', job:'enemy', pos:0, hp:100, maxHp:100, gold:0, pot:1, stats:{move:5, atk:5, def:5, luck:2}, bonus:{moveMin:0,moveMax:0,atkMin:0,atkMax:0,defMin:0,defMax:0,luckMin:0,luckMax:0}, equip:{s:null,w:null,a:null,acc:null}, isAi:true },
+    boss: { hp:100, maxHp:100, mn:8, mx:25 },
+    monsters: {},
+    activeSeals: [15, 35],
+    turn: 'P1', turnCnt: 1, isMoving: false, cameraLocked: true, 
     cards: [], hand: [], summonCnt: 0, slots: {move:null, atk:null, def:null, luck:null},
-    turn: 'P1', turnCnt: 1, activeSkillEffect: null, skillUsedTurn: false,
-    isMoving: false, isProcessing: false, extraTurn: false, frozen: false,
-    monsters: {}, boss: { hp:50, maxHp:50, mn:5, mx:20 }, keyStat: null,
-    limitTurn: 0, aiMerged: false, activeSeals: [15, 35] 
+    aiMerged: false, limitTurn: 0, frozen: false
 };
 
+/* ------------------------------------------------------------------
+   UTILS
+------------------------------------------------------------------ */
 const Utils = {
     rand: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
-    randArr: (arr) => arr[Math.floor(Math.random() * arr.length)],
-    wait: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
-    floatText: (pos, txt, color) => {
+    wait: (ms) => new Promise(r => setTimeout(r, ms)),
+    centerCam: (pos) => {
+        if(!State.cameraLocked) return;
+        const grid = document.getElementById('board-container');
         const tile = document.getElementById(`tile-${pos}`);
-        if(!tile) return;
-        const el = document.createElement('div');
-        el.className = 'float-text'; el.innerText = txt; el.style.color = color;
-        tile.appendChild(el);
-        setTimeout(() => el.remove(), 1500);
+        if(tile) grid.scrollTo({ left: tile.offsetLeft - grid.offsetWidth/2 + 30, behavior:'smooth' });
     },
-    shake: () => {
-        const c = document.getElementById('game-wrapper');
-        c.classList.remove('shake-anim'); void c.offsetWidth; c.classList.add('shake-anim');
-    },
-    flash: () => {
-        const c = document.getElementById('game-wrapper');
-        c.classList.remove('flash-damage'); void c.offsetWidth; c.classList.add('flash-damage');
-    },
-    popup: (title, msg, onOk, choices) => {
-        const el = document.getElementById('modal-gen');
-        const box = document.getElementById('modal-box-gen');
-        const t = document.getElementById('m-title');
-        const m = document.getElementById('m-msg');
-        const c = document.getElementById('m-choices');
-        const b = document.getElementById('m-ok');
-        box.className = 'modal-box'; 
-        t.innerText = title; m.innerHTML = msg; c.innerHTML = '';
-        if (choices && choices.length > 0) {
-            b.style.display = 'none';
-            choices.forEach(ch => {
-                const btn = document.createElement('button');
-                btn.className = 'choice-btn'; btn.innerHTML = ch.txt;
-                btn.onclick = () => { if(ch.act) ch.act(); };
-                c.appendChild(btn);
-            });
-        } else {
-            b.style.display = 'block';
-            b.onclick = () => { el.style.display = 'none'; if(onOk) onOk(); };
+    float: (pos, txt, color='white') => {
+        const t = document.getElementById(`tile-${pos}`);
+        if(t) {
+            const el = document.createElement('div'); el.className='float-text'; el.style.color=color; el.innerHTML=txt;
+            t.appendChild(el); setTimeout(()=>el.remove(), 1200);
         }
-        el.style.display = 'flex';
     },
-    centerCamera: (pos) => {
-        if (!State.cameraLocked) return;
-        const container = document.getElementById('board-container');
-        const tile = document.getElementById(`tile-${pos}`);
-        if(container && tile) {
-            const center = tile.offsetLeft + (tile.offsetWidth / 2) - (container.offsetWidth / 2);
-            container.scrollTo({ left: center, behavior: 'smooth' });
-        }
-    }
+    popup: (html) => {
+        const m = document.getElementById('modal-content');
+        m.innerHTML = html;
+        document.getElementById('modal-gen').style.display = 'flex';
+    },
+    closePopup: () => document.getElementById('modal-gen').style.display = 'none'
 };
 
+/* ------------------------------------------------------------------
+   LOGIC CORE
+------------------------------------------------------------------ */
 const Logic = {
-    getWeightedItem: () => {
-        const r = Math.random() * 100;
-        let targetRank = 0;
-        if(r < 5) targetRank = 3; else if(r < 20) targetRank = 2; else if(r < 50) targetRank = 1; 
-        const pool = ITEMS_DB.filter(i => i.rank === targetRank);
-        if(pool.length > 0) return pool[Utils.rand(0, pool.length-1)];
-        return ITEMS_DB[Utils.rand(0, ITEMS_DB.length-1)]; 
-    },
-    equipItem: (p, item) => {
-        const slot = item.type;
-        const oldItem = p.equip[slot];
-        if(!oldItem) {
-            p.equip[slot] = item;
-            return { type: 'equip', msg: `<span style="color:lime">장착 완료!</span>` };
-        } else {
-            if(item.val > oldItem.val) {
-                p.equip[slot] = item;
-                return { type: 'replace', msg: `<span style="color:cyan">상위 장비로 교체!</span><br>(기존: ${oldItem.n})` };
-            } else {
-                const refund = Math.floor(item.cost / 2);
-                p.gold += refund;
-                return { type: 'sell', msg: `<span style="color:gold">하위 장비 판매 (+${refund}G)</span>` };
-            }
-        }
-    },
-initGame: () => {
-        const grid = document.getElementById('grid');
-        grid.innerHTML = '';
-        
-        // [상수 설정] 여기서 위치와 크기를 한 번에 관리하세요!
-        const MONSTER_POSITIONS = [5, 9, 13, 17, 22, 27, 31, 35, 40, 45];
-        
-        // 몬스터 순서별 크기 (px)
-        const monsterSizes = [60, 75, 100, 90, 90, 125, 160, 140, 160, 220];
-
-const animWrap = (key, emoji, size) => {
-    return `
-        <div class="obj-wrap">
-            <img src="${IMG_SRC[key]}" 
-                 class="monster-img" 
-                 style="width: ${size}px !important; height: ${size}px !important;" 
-                 onerror="this.style.display='none';this.parentNode.innerText='${emoji}'">
-        </div>`;
-};             
-        const staticWrap = (key, emoji) => 
-            `<div class="static-asset">${getImgTag(key, 'img-asset', emoji)}</div>`;
-
-        // 1. 타일 데이터 구조 준비
-        let tilesData = new Array(50).fill(null).map(() => ({ cls: '', content: '' }));
-
-        // ---------------------------------------------------------
-        // 우선순위 1: 시작, 끝, 몬스터 (상수에 정의된 위치)
-        // ---------------------------------------------------------
-        tilesData[0] = { cls: 'tile-start', content: 'START' };
-        tilesData[49] = { cls: 'tile-end', content: animWrap('boss', '👿', 220) };
-
-        // 상수에 정해진 위치에만 몬스터 배치
-        MONSTER_POSITIONS.forEach((pos, idx) => {
-            if (pos >= 49) return; // 보스 자리와 겹침 방지
-            const mName = MONSTERS[Math.min(idx, 9)];
-            const s = MON_STATS[Math.min(idx, 9)];
-            const mSize = monsterSizes[idx] || 100;
-
-            State.monsters[pos] = { name: mName, mn: s.mn, mx: s.mx };
-            tilesData[pos] = { cls: 'tile-monster', content: animWrap(mName, '👹', mSize) };
-        });
-
-        // ---------------------------------------------------------
-        // 우선순위 2: 전직소(1개)와 봉인석(2개)을 남는 칸에 랜덤 배치
-        // ---------------------------------------------------------
-const JOB_SITE_POS = 25; 
-tilesData[JOB_SITE_POS] = { cls: 'tile-job', content: staticWrap('tile_job', '👑') };
-
-// 2. 나머지 빈 칸들 추출 (전직소 자리는 제외됨)
-let emptyTiles = [];
-for (let i = 1; i < 49; i++) {
-    // 몬스터가 없고(content가 비어있고), 전직소 자리가 아닌 곳만 수집
-    if (tilesData[i].content === '' && i !== JOB_SITE_POS) {
-        emptyTiles.push(i);
-    }
-}
-emptyTiles.sort(() => Math.random() - 0.5);
-
-// 3. 봉인석 랜덤 배치 (남은 빈 칸 중 2개)
-for (let j = 0; j < 2; j++) {
-    if (emptyTiles.length > 0) {
-        let idx = emptyTiles.pop();
-        tilesData[idx] = { cls: 'tile-seal', content: staticWrap('tile_seal', '💎') };
-    }
-}
-        // ---------------------------------------------------------
-        // 우선순위 3: 나머지 빈 칸에 이벤트/장해물 배치
-        // ---------------------------------------------------------
-        for (let i = 0; i < 50; i++) {
-            if (tilesData[i].content === '') {
-                let r = Math.random();
-                if (r < 0.1) tilesData[i] = { cls: 'tile-fire', content: staticWrap('tile_fire', '🔥') };
-                else if (r < 0.18) tilesData[i] = { cls: 'tile-ice', content: staticWrap('tile_ice', '❄️') };
-                else if (r < 0.25) tilesData[i] = { cls: 'tile-heal', content: staticWrap('tile_heal', '💧') };
-                else if (r < 0.35) tilesData[i] = { cls: 'tile-event', content: staticWrap('tile_event', '?') };
-            }
-        }
-
-        // 최종 그리드 생성
-        for (let i = 0; i < 50; i++) {
-            const d = document.createElement('div');
-            d.className = `tile ${tilesData[i].cls}`;
-            d.id = `tile-${i}`;
-            d.innerHTML = tilesData[i].content;
-            grid.appendChild(d);
-        }
-        UI.update();
-const p2El = document.createElement('div'); 
-p2El.id = 'pawn-p2'; p2El.className = 'pawn p2';
-grid.appendChild(p2El);
-        Logic.startTurn();
-    },
     getStats: (p) => {
         const s = p.stats, b = p.bonus, e = p.equip;
-        const sVal = e.s ? e.s.val : 0;
-        const wVal = e.w ? e.w.val : 0;
-        const aVal = e.a ? e.a.val : 0;
-        const accVal = e.acc ? e.acc.val : 0;
-        let atkBon = wVal, defBon = aVal, luckBon = 0, moveBon = sVal;
-        if(e.acc) {
-            if(e.acc.desc.includes("운")) luckBon = accVal;
-            if(e.acc.desc.includes("이동")) moveBon += accVal;
+        let mv=0, at=0, df=0, lk=0;
+        if(e.s) mv+=e.s.val; if(e.w) at+=e.w.val; if(e.a) df+=e.a.val; if(e.acc) lk+=e.acc.val;
+        
+        // 유물 보정
+        if(p.id==='P1') {
+            if(p.artifacts.some(a=>a.id==='boots')) mv+=1;
+            if(p.artifacts.some(a=>a.id==='lucky')) lk+=2;
+            if(p.artifacts.some(a=>a.id==='glass')) at+=5;
         }
-        if(p.id==='P1' && Logic.hasArt('boots')) moveBon += 1;
-        if(p.id==='P1' && Logic.hasArt('lucky')) luckBon += 2;
-        if(p.id==='P1' && Logic.hasArt('glass')) atkBon += 5;
+
         let minMove = 1 + b.moveMin;
         if(p.subJob && p.subJob.id === 'pathfinder') minMove = Math.max(4, minMove);
+
         return {
-            mvMin: minMove, mvMax: Math.max(1, s.move + b.moveMax + moveBon),
-            atMin: 1 + b.atkMin, atMax: Math.max(1, s.atk + b.atkMax + atkBon),
-            dfMin: 1 + b.defMin, dfMax: Math.max(1, s.def + b.defMax + defBon),
-            lkMin: 0 + b.luckMin, lkMax: Math.max(0, s.luck + b.luckMax + luckBon)
+            mvMin: minMove, mvMax: Math.max(1, s.move + b.moveMax + mv),
+            atMin: 1 + b.atkMin, atMax: Math.max(1, s.atk + b.atkMax + at),
+            dfMin: 1 + b.defMin, dfMax: Math.max(1, s.def + b.defMax + df),
+            lkMin: 0 + b.luckMin, lkMax: Math.max(0, s.luck + b.luckMax + lk)
         };
     },
-    applyUpgrade: (p, type, isMax, silent=false) => {
-        const key = type + (isMax ? 'Max' : 'Min');
-        p.bonus[key]++;
+    
+    initBoard: () => {
+        const g = document.getElementById('grid'); g.innerHTML='';
+        for(let i=0; i<50; i++){
+            const d=document.createElement('div'); d.className='tile'; d.id=`tile-${i}`;
+            if(i===0) d.classList.add('tile-start'); if(i===49) d.classList.add('tile-end');
+            d.innerText = i===0?'START':(i===49?'BOSS':i);
+            
+            // Map Events Setup
+            if(i===25) { d.classList.add('tile-job'); d.innerHTML = '👑<br>전직'; }
+            else if(State.activeSeals.includes(i)) { d.classList.add('tile-seal'); d.innerHTML = '💎<br>봉인'; }
+            else {
+                // Random Tiles
+                if(![0,49,25].includes(i) && !State.activeSeals.includes(i)) {
+                    const r = Math.random();
+                    if(r<0.05) { d.classList.add('tile-fire'); d.innerHTML='🔥'; } // 화염
+                    else if(r<0.10) { d.classList.add('tile-ice'); d.innerHTML='❄️'; } // 얼음
+                    else if(r<0.15) { d.classList.add('tile-heal'); d.innerHTML='💧'; } // 회복
+                    else if(r<0.20) { d.classList.add('tile-event'); d.innerHTML='❓'; } // 이벤트
+                }
+            }
+            g.appendChild(d);
+        }
+        
+        // Monsters
+        const spots = [4, 8, 12, 16, 21, 26, 32, 36, 41, 46];
+        spots.forEach((pos, idx) => {
+            const mn = MONSTERS[idx];
+            State.monsters[pos] = { name: mn, mn: MON_STATS[idx].mn, mx: MON_STATS[idx].mx };
+            const m = document.createElement('div'); m.className='obj-wrap';
+            m.innerHTML = `<div style="font-size:40px;">${IMG.monster}</div>`; 
+            document.getElementById(`tile-${pos}`).appendChild(m);
+        });
+
+        const boss = document.createElement('div'); boss.className='obj-wrap';
+        boss.innerHTML = `<div style="font-size:60px;">${IMG.boss}</div>`;
+        document.getElementById('tile-49').appendChild(boss);
+
         UI.update();
-        if(!p.isAi && !silent) {
-            const map = {move:'이동', atk:'공격', def:'방어', luck:'운'};
-            Utils.popup("능력치 상승", `${map[type]} ${isMax?'최대':'최소'} +1 증가!`, null);
-        }
+        Utils.centerCam(0);
     },
-    handleDeath: (p) => {
-        if (p.hp <= 0) {
-            p.hp = p.maxHp; p.pos = 0;
-            p.gold = Math.floor(p.gold / 2);
-            Utils.floatText(0, "🚑 구조됨", "lime");
-            UI.update(); return true; 
-        }
-        return false; 
-    },
-    hasArt: (id) => State.p1.artifacts.some(a => a.id === id),
+
     startTurn: () => {
-        State.isMoving = false; State.isProcessing = false; State.activeSkillEffect = null;
-        if (State.limitTurn > 0) {
+        State.isMoving = false;
+        
+        // Doom Timer
+        if(State.limitTurn > 0) {
             State.limitTurn--;
-            const timerEl = document.getElementById('doom-timer');
-            timerEl.style.display = 'block'; timerEl.innerText = `BOSS D-DAY: ${State.limitTurn}`;
-            if(State.limitTurn <= 0) { Logic.endGame(false); return; }
+            const dt = document.getElementById('doom-timer');
+            dt.style.display='block'; dt.innerText = `BOSS D-DAY: ${State.limitTurn}`;
+            if(State.limitTurn <= 0) { alert("Game Over"); location.reload(); return; }
         }
-        if(State.boss.hp > 0 && State.boss.hp < State.boss.maxHp) State.boss.hp++;
-        if (State.aiMerged && State.turn === 'P2') State.turn = 'P1'; 
-        const ind = document.getElementById('turn-msg');
-        document.getElementById('hud-p1').classList.remove('active-turn');
-        document.getElementById('hud-p2').classList.remove('active-turn');
+
+        if(State.aiMerged && State.turn === 'P2') State.turn = 'P1';
+
         if(State.turn === 'P1') {
-            const p1 = State.p1;
-            Utils.centerCamera(p1.pos);
-            if(!State.extraTurn) {
-                State.turnCnt++; if(p1.skillCD > 0) p1.skillCD--;
-                if(p1.subJob && p1.subJob.id === 'paladin') {
-                    p1.hp = Math.min(p1.maxHp, p1.hp + Math.floor(p1.maxHp * 0.1));
-                    Utils.floatText(p1.pos, "성스러운 빛", "yellow");
-                }
-                let g = Utils.rand(1, 10);
-                if(Logic.hasArt('greed')) g *= 2; 
-                p1.gold += g; Utils.floatText(p1.pos, `+${g}G`, "gold");
-            }
-            State.skillUsedTurn = false;
-            if(State.frozen) { Utils.floatText(p1.pos, "❄️동상", "cyan"); State.frozen=false; }
-            document.getElementById('hud-p1').classList.add('active-turn');
-            ind.innerText = State.extraTurn ? "연속 행동 기회!" : `턴 ${State.turnCnt}: 당신의 차례`;
-            ind.style.color = '#4CAF50';
+            State.turnCnt++;
+            document.getElementById('p1-panel').classList.add('active-turn');
+            document.getElementById('p2-panel').classList.remove('active-turn');
             document.getElementById('btn-roll').disabled = false;
-            const bSk = document.getElementById('btn-skill');
-            bSk.classList.remove('active', 'passive');
-            if(p1.subJob) {
-                const isAct = p1.subJob.type === 'active';
-                const color = isAct ? "#fff" : "#888";
-                bSk.innerHTML = `<span style="font-size:10px; color:${color}">[${isAct?'액티브':'패시브'}]</span><br>${p1.subJob.sn}`;
-                if(isAct && p1.skillCD > 0) bSk.innerHTML += `<br><span style="color:red; font-size:10px">쿨타임 (${p1.skillCD})</span>`;
-                else if(!isAct) bSk.classList.add('passive');
-                bSk.disabled = false; 
-            } else {
-                bSk.innerHTML = "<span style='font-size:10px; color:#aaa'>미개방</span><br>스킬";
-                bSk.disabled = true;
-            }
+            
+            // Skill Cooldown
+            if(State.p1.skillCD > 0) State.p1.skillCD--;
+            
+            // Job Passives
+            if(State.p1.subJob?.id === 'paladin') { State.p1.hp = Math.min(State.p1.maxHp, State.p1.hp+10); Utils.float(State.p1.pos, "+10HP", "lime"); }
+            if(State.p1.artifacts.some(a=>a.id==='greed')) State.p1.gold+=10; else State.p1.gold+=5;
+            
+            if(State.frozen) { Utils.float(State.p1.pos, "❄️동상", "cyan"); State.frozen=false; }
+
+            document.getElementById('ui-turn').innerText = `Turn ${State.turnCnt}`;
         } else {
-            document.getElementById('hud-p2').classList.add('active-turn');
-            ind.innerText = State.extraTurn ? "추격자 연속 행동!" : `턴 ${State.turnCnt}: 추격자 턴`;
-            ind.style.color = '#FF5722';
+            document.getElementById('p1-panel').classList.remove('active-turn');
+            document.getElementById('p2-panel').classList.add('active-turn');
             document.getElementById('btn-roll').disabled = true;
-            document.getElementById('btn-skill').disabled = true;
-            if(!State.extraTurn) State.p2.gold += Utils.rand(1,10);
-            State.isProcessing = true;
-            setTimeout(Logic.aiTurn, 500); 
+            State.p2.gold += 10;
+            setTimeout(Logic.aiTurn, 800);
         }
-        State.extraTurn = false;
         UI.update();
     },
+
     aiTurn: async () => {
-        try {
-            await Utils.wait(500); const p = State.p2;
-            if(!State.aiMerged) Utils.centerCamera(p.pos);
-            if (p.hp < p.maxHp * 0.3 && p.pot > 0) {
-                p.pot--; p.hp = Math.min(p.maxHp, p.hp + 50);
-                Utils.floatText(p.pos, "+50HP", "cyan"); await Utils.wait(800);
-            } else if (p.gold >= 150 && Math.random() < 0.6) {
-                const item = ITEMS_DB[Utils.rand(0, ITEMS_DB.length-1)];
-                if(p.gold >= item.cost) {
-                    p.gold -= item.cost; p.equip[item.type] = item;
-                    Utils.floatText(p.pos, `구매: ${item.n}`, "cyan"); await Utils.wait(800);
-                }
-            } else if (p.gold >= 100) { 
-                p.gold -= 100; Logic.applyUpgrade(p, ['move','atk','def','luck'][Utils.rand(0,3)], Math.random()<0.5, true); 
-                Utils.floatText(p.pos, "강화완료", "cyan"); await Utils.wait(800);
-            }
-        } catch(e) { console.error("AI Error", e); } 
-        finally { UI.update(); Game.roll(true); }
-    },
-    moveStep: async (p, steps) => {
-        if(p.id==='P1' && State.frozen) steps = Math.max(1, Math.floor(steps/2));
-        if(p.subJob && p.subJob.id === 'ranger') p.movedSteps = steps; else p.movedSteps = 0;
-        for(let i=0; i<steps; i++) {
-            if(p.pos >= 49) break;
-            p.pos++; Utils.centerCamera(p.pos); UI.update(); await Utils.wait(250);
-            if(State.activeSeals.includes(p.pos)) { await Logic.sealEvent(p); continue; }
-            if(p.pos === 25 && p.id === 'P1') { await Logic.jobEvent(p); continue; }
-            if(State.monsters[p.pos]) return Logic.battle(p, null, () => Logic.endTurn());
-            const opp = p.id==='P1' ? State.p2 : State.p1;
-            if(p.pos === opp.pos && p.pos !== 0 && p.pos !== 49 && !State.aiMerged) return Logic.battle(p, opp, () => Logic.endTurn());
+        const p = State.p2;
+        Utils.centerCam(p.pos);
+        // AI Logic: Heal or Shop
+        if(p.hp < p.maxHp * 0.3 && p.pot > 0) {
+            p.pot--; p.hp += 50; Utils.float(p.pos, "물약사용", "pink"); await Utils.wait(500);
+        } else if(p.gold >= 100) {
+             p.gold -= 100; p.stats.atk++; Utils.float(p.pos, "강화", "gold"); await Utils.wait(500);
         }
-        if(p.pos === 49) {
-            if(p.isAi) { Logic.aiPowerUpBoss(); return; } 
-            else { return Logic.battle(p, null, () => Logic.endTurn(), true); }
-        }
-        const tile = document.getElementById(`tile-${p.pos}`);
-        if(tile.classList.contains('tile-fire')) {
-            p.hp -= 10; Utils.flash(); Utils.floatText(p.pos, "🔥-10HP", "orange");
-            if (Logic.handleDeath(p)) { return Logic.endTurn(); }
-        } else if(tile.classList.contains('tile-ice')) {
-            Utils.floatText(p.pos, "❄️오한..", "cyan"); if(p.id==='P1') State.frozen = true;
-        } else if(tile.classList.contains('tile-heal')) {
-            p.hp = Math.min(p.maxHp, p.hp + 15); Utils.floatText(p.pos, "💧+15HP", "lime"); UI.update();
-        }
-        if(!tile.classList.contains('tile-monster') && !tile.classList.contains('tile-start') && p.pos !== 49 && !State.activeSeals.includes(p.pos) && p.pos !== 25) {
-            await Logic.event(p);
-        } else { Logic.endTurn(); }
+        Game.roll(true);
     },
-    sealEvent: (p) => {
-        return new Promise(resolve => {
-            const tile = document.getElementById(`tile-${p.pos}`);
-            tile.className = 'tile'; tile.innerHTML = ''; 
-            State.activeSeals = State.activeSeals.filter(s => s !== p.pos);
-            if(p.isAi) {
-                State.boss.maxHp += 10; State.boss.hp += 10;
-                State.boss.mn += 2; State.boss.mx += 2;
-                Utils.floatText(p.pos, "봉인파괴(보스강화)", "red"); setTimeout(resolve, 800);
-            } else {
-                State.boss.hp = Math.floor(State.boss.hp * 0.8);
-                const art = ARTIFACTS[Utils.rand(0, ARTIFACTS.length-1)];
-                if(!State.p1.artifacts.find(a=>a.id===art.id)) State.p1.artifacts.push(art);
-                Utils.popup("봉인 해제!", `봉인석이 파괴되었습니다.<br>마왕의 힘이 약해집니다. (-20% HP)<br><br>유물 발견: <b style="color:gold;">${art.n}</b><br><span style="color:#aaa">${art.desc}</span>`, resolve);
-            }
-        });
-    },
-    jobEvent: (p) => {
-        return new Promise(resolve => {
-            if(p.subJob) { resolve(); return; } 
-            const choices = []; const jobs = JOBS[p.job];
-            jobs.forEach(j => {
-                choices.push({
-                    txt: `<div style="font-size:18px">${j.i} ${j.n} <span style="font-size:14px;color:gold">(${j.sn})</span></div><div style="font-size:12px;color:#aaa">${j.desc}</div>`,
-                    act: () => {
-                        p.subJob = j; p.maxHp += 20; p.hp = p.maxHp;
-                        p.bonus.atkMax += 2; p.bonus.defMax += 2;
-                        if(j.id === 'alchemist') p.pot += 2;
-                        const bSk = document.getElementById('btn-skill');
-                        const isAct = j.type === 'active';
-                        bSk.innerHTML = `<span style="font-size:10px; color:${isAct?'#fff':'#888'}">[${isAct?'액티브':'패시브'}]</span><br>${j.sn}`;
-                        bSk.disabled = false; 
-                        UI.update();
-                        Utils.popup("전직 완료!", `${j.n}가 되었습니다!<br>스킬 획득: <b style="color:gold">${j.sn}</b><br>체력회복, MaxHP+20, 공방+2`, resolve);
-                    }
-                });
-            });
-            Utils.popup("👑 전직관", "새로운 힘을 얻을 때가 되었습니다. (전직 시 상세 능력 확인)", null, choices);
-        });
-    },
-    aiPowerUpBoss: () => {
-        State.aiMerged = true; State.p2.hp = 0; State.boss.hp *= 2;
-        State.boss.mn *= 2; State.boss.mx *= 2; State.limitTurn = 6; UI.update();
-        Utils.popup("⚠️ 경고", "추격자가 마왕에게 영혼을 바쳤습니다!<br>마왕이 강력해졌습니다.<br><b style='color:red'>5턴 안에 마왕을 처치하세요!</b>", () => Logic.endTurn());
-    },
-    event: (p) => {
-        return new Promise(resolve => {
-            const finish = () => { UI.update(); resolve(); Logic.endTurn(); };
-            const applyRandomStat = () => {
-                const types = ['move','atk','def','luck'];
-                const type = types[Utils.rand(0, 3)];
-                const val = Utils.rand(-1, 3);
-                const typeName = {move:'이동', atk:'공격', def:'방어', luck:'운'}[type];
-                if (val >= 0) {
-                    p.bonus[type + 'Max'] += val;
-                    if(val > 1 && type !== 'luck') p.bonus[type + 'Min'] += 1; 
-                    return `<span style="color:${val===3?'gold':'lime'}">${typeName} +${val}</span>`;
-                } else {
-                    p.bonus[type + 'Max'] = Math.max(0, p.bonus[type + 'Max'] + val);
-                    return `<span style="color:red">${typeName} ${val}</span>`;
-                }
-            };
-            if(p.isAi) {
-                Logic.applyUpgrade(p, ['move','atk','def','luck'][Utils.rand(0,3)], true, true);
-                Utils.floatText(p.pos, "이벤트", "cyan"); setTimeout(finish, 800);
-            } else {
-                const evType = Utils.rand(0, 1); 
-                if(evType === 0) {
-                    Utils.popup("오래된 상자", "먼지가 쌓인 상자입니다. 무엇이 들었을까요?", null, [
-                        {txt:"연다 (장비 or 랜덤능력)", act:()=>{
-                            const r = Math.random();
-                            if(r < 0.4) { 
-                                const item = Logic.getWeightedItem();
-                                const res = Logic.equipItem(p, item);
-                                const rankName = ["일반","희귀","영웅","전설"][item.rank];
-                                const rankColor = ["#ccc","#448aff","#b388ff","gold"][item.rank];
-                                Utils.popup("아이템 획득!", `[<span style="color:${rankColor}">${rankName}</span>] <b>${item.n}</b><br><span style="color:#aaa">${item.desc}</span><br><br>${res.msg}`, finish);
-                            } else { 
-                                const resultMsg = applyRandomStat();
-                                Utils.popup("상자의 기운", `상자에서 기이한 연기가 피어오릅니다.<br><br><b>${resultMsg}</b>`, finish);
-                            }
-                        }},
-                        {txt:"무시한다", act: finish}
-                    ]);
-                } else {
-                    Utils.popup("수상한 샘물", "마력이 느껴지는 샘물입니다.\n(능력치가 변동됩니다: -1 ~ +3)", null, [
-                        {txt:"마신다", act:()=>{
-                            const res1 = applyRandomStat();
-                            const res2 = applyRandomStat(); 
-                            Utils.popup("꿀꺽", `몸에 변화가 생깁니다!<br>${res1}<br>${res2}`, finish);
-                        }},
-                        {txt:"지나간다", act: finish}
-                    ]);
-                }
-            }
-        });
-    },
-    battle: (atk, def, callback, isBoss=false) => {
+
+    // --- BATTLE SYSTEM ---
+    battle: (atk, def, onEnd, isBoss=false) => {
         const isPvP = !!def;
-        const name = isBoss ? "마왕" : (isPvP ? (def.id==='P2'?"추격자":"나") : State.monsters[atk.pos].name);
+        const defName = isBoss ? "마왕" : (isPvP ? def.name : State.monsters[atk.pos].name);
         const sAtk = Logic.getStats(atk);
-        let dfMin=0, dfMax=0, hpCur=0, hpMax=0;
-        let enAtkStr = "-"; 
-        let enemyImgKey = ''; let needFlip = false;
-
-        if(isBoss) { 
-            dfMin = State.boss.mn; dfMax = State.boss.mx; 
-            hpCur = State.boss.hp; hpMax = State.boss.maxHp; 
-            enAtkStr = `${State.boss.mn}~${State.boss.mx}`; 
-            enemyImgKey = 'boss';
+        
+        let dMin=0, dMax=0, dLMin=0, dLMax=0, hpCur=0, hpMax=0;
+        if(isBoss) {
+            dMin = State.boss.mn; dMax = State.boss.mx; hpCur = State.boss.hp; hpMax = State.boss.maxHp;
         } else if(isPvP) {
-            const sDef = Logic.getStats(def); 
-            dfMin = sDef.dfMin; dfMax = sDef.dfMax; 
+            const sDef = Logic.getStats(def);
+            dMin = sDef.dfMin; dMax = sDef.dfMax; dLMin=sDef.lkMin; dLMax=sDef.lkMax;
             hpCur = def.hp; hpMax = def.maxHp;
-            enAtkStr = `${sDef.atMin}~${sDef.atMax}`;
-            if (def.id === 'P1') { enemyImgKey = def.subJob||def.job; needFlip = true; } 
-            else { enemyImgKey = 'enemy'; needFlip = true; } 
         } else {
-            const m = State.monsters[atk.pos]; 
-            dfMin = m.mn; dfMax = m.mx; 
-            hpCur = 100; hpMax = 100; 
-            enAtkStr = "-"; 
-            enemyImgKey = m.name; 
-            needFlip = false;
+            const m = State.monsters[atk.pos];
+            dMin = m.mn; dMax = m.mx; hpCur = 50; hpMax = 50; 
         }
 
-        let p1ImgKey = (atk.id === 'P1') ? (atk.subJob ? atk.subJob.id : atk.job) : 'enemy';
+        const atkIcon = atk.id==='P1' ? (atk.subJob ? IMG[atk.subJob.id] : IMG[atk.job]) : IMG.enemy;
+        const defIcon = isBoss ? IMG.boss : (isPvP ? (def.id==='P2'?IMG.enemy:IMG[def.job]) : IMG.monster);
 
-        // Logic.battle 함수 내 previewHtml 변수 부분 수정
-const previewHtml = `
-    <div class="battle-preview-wrap">
-        <div class="preview-card">
-            <div class="p-img-box">${getImgTag(p1ImgKey, 'img-asset')}</div>
-            <div style="color:#fff; font-size:11px; font-weight:bold;">${atk.name}</div>
-            <div class="b-hp-bar">❤ ${atk.hp}</div>
-            <div class="b-main-stat" style="color:#80d8ff">ATK ${sAtk.atMax}</div>
-        </div>
-        
-        <div class="vs-text">VS</div>
-        
-        <div class="preview-card">
-            <div class="p-img-box ${needFlip?'preview-flip':''}">${getImgTag(enemyImgKey, 'img-asset', '👹')}</div>
-            <div style="color:#fff; font-size:11px; font-weight:bold;">${name}</div>
-            <div class="b-hp-bar">❤ ${hpCur}</div>
-            <div class="b-main-stat" style="color:#b9f6ca">DEF ${dfMax}</div>
-        </div>
-    </div>
-    <button onclick="Logic.startBattle()" class="btn-primary" style="width:100%; margin-top:8px; padding:10px;">전투 시작</button>
-`;
+        // Active Skill Check
+        const activeSkill = (atk.id==='P1' && State.p1.activeSkill) ? State.p1.subJob : null;
 
-        const runCombat = () => {
-            let combatLog = [];
-            let aMin = sAtk.atMin, aMax = sAtk.atMax;
-            let lkMin = sAtk.lkMin, lkMax = sAtk.lkMax;
-
-            if(atk.id==='P1' && atk.subJob && atk.subJob.id === 'assassin') {
-                const luckBonus = sAtk.lkMax * 2; aMin += luckBonus; aMax += luckBonus;
-                combatLog.push(`급소 가격: 운x2 공격력(${luckBonus}) 추가`);
-            }
-            if(atk.id==='P1' && atk.subJob && atk.subJob.id === 'ranger') {
-                aMin += atk.movedSteps; aMax += atk.movedSteps;
-                combatLog.push(`바람의 사격: 거리(${atk.movedSteps}) 데미지 추가`);
-            }
-            if(atk.id==='P1') {
-                if(State.activeSkillEffect === 'fireball') { 
-                    aMin=20; aMax=20; combatLog.push("메테오: 고정 피해 20");
-                } 
-                if(atk.subJob && atk.subJob.id === 'berserker' && atk.hp > 25) {
-                    atk.hp -= 25; aMin *= 2; aMax *= 2; 
-                    combatLog.push("피의 격노: HP 25 소모, 공격력 2배");
-                }
-                if(atk.subJob && atk.subJob.id === 'warlock' && atk.gold >= 50) {
-                    atk.gold -= 50; aMin += 15; aMax += 15;
-                    combatLog.push("영혼 착취: 골드 소모, 피해 +15");
-                }
-            }
-
-            const battleSceneHtml = `
-            <div class="battle-scene" id="battle-scene">
-                <div class="battler-wrap p1-side">${getImgTag(p1ImgKey, 'battler-img', '⚔️')}</div>
-                <div style="font-weight:bold; color:#777; font-size:24px;">VS</div>
-                <div class="battler-wrap enemy-side ${needFlip ? 'battler-flip' : ''}">${getImgTag(enemyImgKey, 'battler-img', '👹')}</div>
-            </div>`;
-
-            const hpP1Start = atk.hp; const hpP1Max = atk.maxHp;
-            let hpTargetStart = isBoss ? State.boss.hp : (isPvP ? def.hp : 100);
-            let hpTargetMax = isBoss ? State.boss.maxHp : (isPvP ? def.maxHp : 100);
-
-            const visualHtml = `
-            <div class="battle-visual-row">
-                <div class="bv-side">
-                    <div class="bv-name">${atk.name}</div>
-                    <div class="bv-bar-bg"><div id="bv-p1" class="bv-bar-fill p1-bv-fill" style="width:${(hpP1Start/hpP1Max)*100}%"></div><div id="bv-txt-p1" class="bv-bar-txt">${hpP1Start}</div></div>
+        // 1. Battle Prep UI
+        const showPrep = () => {
+            const skillHtml = activeSkill ? `<div class="skill-notice">⚡ <b>${activeSkill.sn}</b> 발동!</div>` : '';
+            Utils.popup(`
+                <div class="battle-header">${isBoss?'☠️ 보스전':(isPvP?'⚔️ 결투':'👹 전투')}</div>
+                <div class="battle-stage">
+                    <div class="fighter-card">
+                        <div class="f-img-box"><div style="font-size:40px;">${atkIcon}</div></div>
+                        <div class="f-name">${atk.name}</div>
+                        <div class="f-hp-bar"><div class="f-hp-fill" style="width:${(atk.hp/atk.maxHp)*100}%; background:var(--p1-color);"></div></div>
+                        <div class="stat-compare"><span class="sc-label">ATK</span> <span class="sc-val">${sAtk.atMin}~${sAtk.atMax}</span></div>
+                    </div>
+                    <div class="vs-badge">VS</div>
+                    <div class="fighter-card">
+                        <div class="f-img-box" style="border-color:#da3633"><div style="font-size:40px;">${defIcon}</div></div>
+                        <div class="f-name">${defName}</div>
+                        <div class="f-hp-bar"><div class="f-hp-fill" style="width:${(hpCur/hpMax)*100}%; background:var(--p2-color);"></div></div>
+                        <div class="stat-compare"><span class="sc-val">${dMin}~${dMax}</span> <span class="sc-label" style="color:#da3633">DEF</span></div>
+                    </div>
+                    ${skillHtml}
                 </div>
-                <div class="bv-side">
-                    <div class="bv-name">${name}</div>
-                    <div class="bv-bar-bg"><div id="bv-enemy" class="bv-bar-fill enemy-bv-fill" style="width:${(isBoss || isPvP) ? (hpTargetStart/hpTargetMax)*100 : 100}%"></div><div id="bv-txt-enemy" class="bv-bar-txt">${isBoss||isPvP ? hpTargetStart : '?'}</div></div>
-                </div>
-            </div>`;
-
-            document.getElementById('m-msg').innerHTML = `${battleSceneHtml}${visualHtml}<div style="color:orange; font-weight:bold; animation:pulse 1s infinite">⚔️ 격돌 중...</div>`;
-            document.getElementById('m-choices').innerHTML = ''; 
-
-            setTimeout(() => {
-                try {
-                    let rAtk = Utils.rand(aMin, aMax); let rLuck = Utils.rand(lkMin, lkMax);
-                    let totalAtk = rAtk + rLuck;
-                    if(atk.id==='P1' && State.activeSkillEffect === 'fireball') totalAtk = 20;
-
-                    let rDef = Utils.rand(dfMin, dfMax);
-                    let rDLuck = isPvP ? Utils.rand(Logic.getStats(def).lkMin, Logic.getStats(def).lkMax) : 0;
-                    let totalDef = rDef + rDLuck;
-
-                    if(def && def.id === 'P1') {
-                        if(Logic.hasArt('glass')) { totalDef -= 5; combatLog.push("유리대포: 받는 피해 +5"); }
-                    }
-                    if(atk.id==='P1' && atk.subJob && atk.subJob.id === 'sniper') {
-                        totalDef = Math.floor(totalDef * 0.5); combatLog.push("약점 포착: 방어력 50% 관통");
-                    }
-
-                    let win = totalAtk >= totalDef;
-                    if(!win && def && def.id === 'P1' && def.subJob && def.subJob.id === 'phantom') {
-                        if(Math.random() < 0.3) { win = false; totalAtk = 0; Utils.floatText(def.pos, "회피!", "cyan"); combatLog.push("그림자 망토: 완전 회피!"); }
-                    }
-
-                    const p1Img = document.querySelector('.p1-side .battler-img');
-                    const enImg = document.querySelector('.enemy-side .battler-img');
-                    if(p1Img && enImg) {
-                        p1Img.classList.add('atk-anim-p1');
-                        setTimeout(() => p1Img.classList.remove('atk-anim-p1'), 300);
-                        if(win) setTimeout(() => { enImg.classList.add('hit-anim'); setTimeout(() => enImg.classList.remove('hit-anim'), 400); }, 200);
-                        else setTimeout(() => { enImg.classList.add('atk-anim-enemy'); setTimeout(() => enImg.classList.remove('atk-anim-enemy'), 300); setTimeout(() => { p1Img.classList.add('hit-anim'); setTimeout(() => p1Img.classList.remove('hit-anim'), 400); }, 200); }, 400);
-                    }
-                    Utils.shake();
-
-                    let log = `공격: <b>${totalAtk}</b> vs 방어: <b>${totalDef}</b>`;
-                    let bossDead = false;
-
-                    if(isBoss) {
-                        State.boss.hp -= totalAtk;
-                        Utils.floatText(49, `-${totalAtk}HP`, "red");
-                        let bossAtkVal = Utils.rand(State.boss.mn, State.boss.mx);
-                        let playerDefVal = Utils.rand(Logic.getStats(atk).dfMin, Logic.getStats(atk).dfMax);
-                        let bossDmg = Math.max(0, bossAtkVal - playerDefVal);
-                        if(atk.id==='P1' && atk.subJob && atk.subJob.id === 'guardian') { bossDmg = Math.max(0, bossDmg - 3); combatLog.push("철벽 방어: 피해 감소"); }
-                        atk.hp -= bossDmg;
-                        Utils.flash(); Utils.floatText(atk.pos, `-${bossDmg}HP`, "red");
-                        log += `<br>마왕 반격! (공${bossAtkVal} vs 방${playerDefVal}) <span style="color:red">-${bossDmg}HP</span>`;
-                        if(def && def.id==='P1' && def.subJob && def.subJob.id === 'avenger') { State.boss.hp -= totalDef; Utils.floatText(49, `-${totalDef}HP(반사)`, "yellow"); }
-                        if(State.boss.hp <= 0) { State.boss.hp=0; bossDead=true; }
-                    } else {
-                        if(win) {
-                            if(isPvP) { def.hp -= totalAtk; Utils.floatText(def.pos, `-${totalAtk}HP`, "red"); }
-                            let recoil = Math.floor(totalDef * 0.5);
-                            if(atk.id==='P1' && atk.subJob && atk.subJob.id === 'guardian') { recoil = Math.max(0, recoil - 3); if(recoil < Math.floor(totalDef*0.5)) combatLog.push("철벽 방어: 반동 감소"); }
-                            if(recoil > 0) { atk.hp -= recoil; Utils.flash(); log += `<br><span style="color:orange">승리! (반동 -${recoil}HP)</span>`; }
-                            else { log += `<br><span style="color:lime">완벽한 승리!</span>`; }
-                        } else {
-                            let recoil = Math.max(1, totalDef - totalAtk);
-                            if(atk.id==='P1' && atk.subJob && atk.subJob.id === 'guardian') recoil = Math.max(0, recoil - 3);
-                            atk.hp -= recoil; Utils.flash(); Utils.floatText(atk.pos, `-${recoil}HP`, "red");
-                            if(def && def.id==='P1' && Logic.hasArt('thorn')) { atk.hp -= 5; log += "<br>가시갑옷 반사! (-5)"; }
-                            log += `<br><span style="color:red">패배.. -${recoil} HP</span>`;
-                        }
-                    }
-
-                    if(atk.id==='P1' && Logic.hasArt('vamp')) { atk.hp += 5; Utils.floatText(atk.pos, "+5HP", "pink"); }
-
-                    if(win && !isBoss && !isPvP) {
-                        delete State.monsters[atk.pos];
-                        const tile = document.getElementById(`tile-${atk.pos}`); if(tile) { tile.className='tile'; tile.innerHTML=''; }
-                        const g = Utils.rand(30,60); atk.gold+=g; if(!atk.isAi) Utils.floatText(atk.pos, `+${g}G`, "gold");
-                        if(atk.id==='P1') Logic.checkLv(); else Logic.applyUpgrade(atk, ['move','atk','def','luck'][Utils.rand(0,3)], Math.random()<0.5, true);
-                    } else if(win && isPvP) {
-                        const push = Math.max(1, totalAtk - totalDef); def.pos = Math.max(0, def.pos - push); State.extraTurn = true; log += "<br>상대 밀쳐냄! 연속 행동!";
-                    } else if(!win) {
-                        const push = Math.max(1, totalDef - totalAtk); atk.pos = Math.max(0, atk.pos - push); log += "<br>공격 실패! 밀려남!";
-                    }
-
-                    if (Logic.handleDeath(atk)) { log += "<br><b style='color:red'>기절! 구조되었습니다.</b>"; State.extraTurn = false; }
-                    UI.update();
-
-                    const p1Bar = document.getElementById('bv-p1'); const p1Txt = document.getElementById('bv-txt-p1');
-                    if(p1Bar) { 
-                        const finalP1Hp = atk.hp; const finalP1Pct = (finalP1Hp / atk.maxHp) * 100; 
-                        if(finalP1Hp < hpP1Start) p1Bar.classList.add('hit'); 
-                        p1Bar.style.width = `${Math.max(0, finalP1Pct)}%`; p1Txt.innerText = finalP1Hp; 
-                    }
-                    const enBar = document.getElementById('bv-enemy'); const enTxt = document.getElementById('bv-txt-enemy');
-                    if(enBar) { 
-                        let finalEnHp = isBoss?State.boss.hp : (isPvP?def.hp : (win?0:100)); 
-                        let finalEnMax = isBoss?State.boss.maxHp : (isPvP?def.maxHp : 100);
-                        const finalEnPct = (finalEnHp / finalEnMax) * 100; 
-                        if(finalEnHp < hpTargetStart) enBar.classList.add('hit'); 
-                        enBar.style.width = `${Math.max(0, finalEnPct)}%`; enTxt.innerText = (isBoss||isPvP)?finalEnHp:(win?'DEAD':'?'); 
-                    }
-
-                    let detailLog = ""; if(combatLog.length > 0) detailLog = `<div style="margin-top:5px; font-size:11px; color:gold; border-top:1px solid #555; padding-top:5px;">[전투 상세]<br>${combatLog.join('<br>')}</div>`;
-                    const resultHtml = `<div style="border:2px solid ${win?'lime':'red'}; padding:10px; border-radius:8px; background:rgba(0,0,0,0.5); margin-bottom:10px;"><div style="font-size:24px; font-weight:bold; color:${win?'lime':'red'}">${win?"WIN!":"LOSE.."}</div><div style="font-size:12px; color:#ddd; margin-top:5px;">${log}</div>${detailLog}</div>`;
-
-                    const msgContainer = document.getElementById('m-msg');
-                    const battleSceneDiv = msgContainer.querySelector('.battle-scene');
-                    const visualDiv = msgContainer.querySelector('.battle-visual-row');
-                    msgContainer.innerHTML = '';
-                    if(battleSceneDiv) msgContainer.appendChild(battleSceneDiv);
-                    if(visualDiv) msgContainer.appendChild(visualDiv);
-                    msgContainer.innerHTML += resultHtml;
-
-                    if (atk.isAi) {
-                        setTimeout(() => {
-                            document.getElementById('modal-gen').style.display='none';
-                            if(bossDead) Logic.endGame(true); else callback();
-                        }, 2000);
-                    } else {
-                        const btn = document.getElementById('m-ok');
-                        btn.style.display = 'block';
-                        btn.innerText = '확인'; 
-                        btn.onclick = () => {
-                            document.getElementById('modal-gen').style.display='none';
-                            if(bossDead) Logic.endGame(true); else callback();
-                        };
-                    }
-
-                } catch(e) { console.error(e); document.getElementById('modal-gen').style.display='none'; callback(); }
-            }, 1200);
+                <button class="btn-main" id="btn-fight-start">⚔️ 전투 시작</button>
+            `);
+            
+            if(atk.isAi) setTimeout(runBattle, 1500);
+            else document.getElementById('btn-fight-start').onclick = runBattle;
         };
 
-        if (atk.isAi) {
-            Utils.popup(isBoss?"☠️ 보스전":(isPvP?"⚔️ PVP":"👹 몬스터 발견"), previewHtml, null, []);
-            setTimeout(runCombat, 3000);
-        } else {
-            Utils.popup(isBoss?"☠️ 보스전":(isPvP?"⚔️ PVP":"👹 몬스터 발견"), previewHtml, null, [
-                { txt: "⚔️ 전투 시작", act: runCombat }
-            ]);
-        }
+        // 2. Battle Logic & Result UI
+        const runBattle = () => {
+            let log = [];
+            let rawAtk = Utils.rand(sAtk.atMin, sAtk.atMax);
+            let luckAtk = Utils.rand(sAtk.lkMin, sAtk.lkMax);
+            
+            // Passives (Attack)
+            if(atk.id==='P1') {
+                if(atk.subJob?.id === 'assassin') luckAtk *= 2; 
+                if(atk.subJob?.id === 'ranger') rawAtk += atk.movedSteps;
+                if(atk.subJob?.id === 'berserker' && atk.hp > 25) { atk.hp-=25; rawAtk*=2; log.push("피의 격노 (HP-25, 공2배)"); }
+                if(activeSkill?.id === 'archmage') { rawAtk = 20; luckAtk = 0; log.push("메테오 스트라이크!"); }
+            }
 
-        if(isBoss) document.getElementById('modal-box-gen').classList.add('boss-theme');
-        else document.getElementById('modal-box-gen').classList.remove('boss-theme');
+            let totalAtk = rawAtk + luckAtk;
+            let rawDef = Utils.rand(dMin, dMax);
+            let luckDef = Utils.rand(dLMin, dLMax);
+            let totalDef = rawDef + luckDef;
+
+            // Passives (Def)
+            if(def && def.id==='P1') {
+                 if(def.artifacts.some(a=>a.id==='glass')) totalDef -= 5;
+            }
+            if(atk.id==='P1' && atk.subJob?.id === 'sniper') { totalDef = Math.floor(totalDef/2); log.push("약점 포착 (관통)"); }
+
+            // Combat Result
+            let win = totalAtk >= totalDef;
+            let dmg = 0, selfDmg = 0;
+            
+            // Evasion
+            if(!win && def && def.id==='P1' && def.subJob?.id==='phantom' && Math.random()<0.3) {
+                log.push("그림자 망토: 회피!"); totalAtk=0;
+            }
+
+            if(win) {
+                dmg = isPvP || isBoss ? Math.max(1, totalAtk - Math.floor(totalDef/2)) : 100;
+                selfDmg = (isBoss || isPvP) ? Math.floor(totalDef * 0.2) : 0;
+                
+                if(atk.id==='P1' && atk.subJob?.id==='guardian') selfDmg = Math.max(0, selfDmg-3);
+                
+                log.push(`<span class="log-hlt">승리!</span> 공격 ${totalAtk} vs 방어 ${totalDef}`);
+                log.push(`적에게 <span class="log-dmg">${dmg}</span> 피해!`);
+            } else {
+                selfDmg = Math.max(1, totalDef - totalAtk);
+                if(def && def.id==='P1' && def.artifacts.some(a=>a.id==='thorn')) { atk.hp-=5; log.push("가시갑옷 반사 -5HP"); }
+                log.push(`<span style="color:#da3633">패배..</span> 반동 ${selfDmg} 피해`);
+            }
+
+            // Apply Damage
+            if(isBoss) State.boss.hp = Math.max(0, State.boss.hp - dmg);
+            else if(isPvP) def.hp = Math.max(0, def.hp - dmg);
+            
+            atk.hp = Math.max(0, atk.hp - selfDmg);
+            if(atk.id==='P1') State.p1.activeSkill = false;
+            
+            // Vamp
+            if(atk.id==='P1' && atk.artifacts.some(a=>a.id==='vamp')) { atk.hp+=5; log.push("흡혈 +5HP"); }
+
+            // Result UI
+            Utils.popup(`
+                <div class="battle-header">${win ? '<span style="color:lime">VICTORY</span>' : '<span style="color:red">DEFEAT</span>'}</div>
+                <div class="battle-stage">
+                    <div class="fighter-card">
+                        <div class="f-img-box"><div style="font-size:40px;">${atkIcon}</div></div>
+                        <div class="f-hp-bar"><div class="f-hp-fill" style="width:${(atk.hp/atk.maxHp)*100}%; background:var(--p1-color);"></div></div>
+                        <div class="f-name">${atk.hp} / ${atk.maxHp}</div>
+                    </div>
+                    <div class="fighter-card">
+                        <div class="f-img-box" style="border-color:#da3633"><div style="font-size:40px;">${defIcon}</div></div>
+                        <div class="f-hp-bar"><div class="f-hp-fill" style="width:${(isBoss?State.boss.hp : (isPvP?def.hp:0)) / (isBoss?State.boss.maxHp:(isPvP?def.maxHp:100))*100}%; background:var(--p2-color);"></div></div>
+                        <div class="f-name">${isBoss?State.boss.hp:(isPvP?def.hp:'DEAD')}</div>
+                    </div>
+                </div>
+                <div class="battle-log-area">
+                    ${log.map(l => `<div class="log-line">${l}</div>`).join('')}
+                </div>
+                <button class="btn-main" id="btn-close-battle">확인</button>
+            `);
+
+            // Float Text
+            if(dmg>0) Utils.float(isBoss?49:(isPvP?def.pos:atk.pos), `-${dmg}`, "red");
+            if(selfDmg>0) Utils.float(atk.pos, `-${selfDmg}`, "red");
+
+            // Post Battle
+            if(win && !isBoss && !isPvP) {
+                delete State.monsters[atk.pos];
+                const t = document.getElementById(`tile-${atk.pos}`);
+                if(t.querySelector('.obj-wrap')) t.querySelector('.obj-wrap').remove();
+                atk.gold += Utils.rand(30,60);
+            }
+
+            UI.update();
+            const closeAct = () => { Utils.closePopup(); onEnd(); };
+            if(atk.isAi) setTimeout(closeAct, 2000);
+            else document.getElementById('btn-close-battle').onclick = closeAct;
+        };
+        showPrep();
     },
-    checkLv: () => {},
+
+    handleEvent: (p) => {
+        return new Promise(resolve => {
+            const t = document.getElementById(`tile-${p.pos}`);
+            // Fire
+            if(t.classList.contains('tile-fire')) { 
+                p.hp -= 10; Utils.float(p.pos, "-10HP", "orange"); 
+                resolve();
+            }
+            // Ice
+            else if(t.classList.contains('tile-ice')) {
+                Utils.float(p.pos, "동상", "cyan"); if(p.id==='P1') State.frozen=true;
+                resolve();
+            }
+            // Heal
+            else if(t.classList.contains('tile-heal')) {
+                p.hp = Math.min(p.maxHp, p.hp+20); Utils.float(p.pos, "+20HP", "lime");
+                resolve();
+            }
+            // Random Box
+            else if(t.classList.contains('tile-event') && p.id==='P1') {
+                Utils.popup(`
+                    <h3 style="color:var(--gold)">오래된 상자</h3>
+                    <div style="text-align:center; color:#ddd; margin-bottom:10px;">무엇이 들어있을까요?</div>
+                    <button class="choice-btn" id="evt-open">연다</button>
+                    <button class="choice-btn" id="evt-pass">지나간다</button>
+                `);
+                document.getElementById('evt-open').onclick = () => {
+                    const r = Math.random();
+                    let msg = "";
+                    if(r<0.4) {
+                        const it = ITEMS[Utils.rand(0, ITEMS.length-1)];
+                        p.equip[it.type] = it; msg = `${it.n} 획득!`;
+                    } else {
+                        p.gold += 50; msg = "50골드 획득!";
+                    }
+                    Utils.popup(`<div style="text-align:center; padding:20px;">${msg}</div>`);
+                    setTimeout(() => { Utils.closePopup(); resolve(); }, 1000);
+                };
+                document.getElementById('evt-pass').onclick = () => { Utils.closePopup(); resolve(); };
+            }
+            // Job Site
+            else if(p.pos === 25 && p.id === 'P1' && !p.subJob) {
+                const choices = JOBS[p.job].map(j => `<button class="choice-btn" onclick="Logic.jobChange('${j.id}')"><b>${j.n}</b><br><span style="font-size:10px">${j.desc}</span></button>`).join('');
+                Utils.popup(`<h3 style="color:var(--gold)">전직소</h3>${choices}`);
+                // resolve handled in jobChange
+            }
+            // Seal
+            else if(State.activeSeals.includes(p.pos)) {
+                State.activeSeals = State.activeSeals.filter(s => s!==p.pos);
+                t.classList.remove('tile-seal'); t.innerHTML = p.pos;
+                if(p.id==='P1') {
+                    State.boss.hp = Math.floor(State.boss.hp*0.8);
+                    const art = ARTIFACTS[Utils.rand(0, ARTIFACTS.length-1)];
+                    p.artifacts.push(art);
+                    Utils.popup(`<div style="text-align:center;">봉인 해제!<br>보스 체력 감소 & <span style="color:var(--gold)">${art.n}</span> 획득</div>`);
+                    setTimeout(() => { Utils.closePopup(); resolve(); }, 1500);
+                } else {
+                    State.boss.hp += 20; Utils.float(p.pos, "봉인파괴(보스강화)", "red");
+                    resolve();
+                }
+            }
+            else resolve();
+        });
+    },
+
+    jobChange: (jid) => {
+        const job = JOBS[State.p1.job].find(j=>j.id===jid);
+        State.p1.subJob = job;
+        State.p1.maxHp += 20; State.p1.hp = State.p1.maxHp;
+        State.p1.bonus.atkMax += 2; State.p1.bonus.defMax += 2;
+        Utils.closePopup();
+        Logic.endTurn();
+    },
+
     endTurn: () => {
-        document.getElementById('modal-gen').style.display='none';
-        State.isMoving = false;
-        State.isProcessing = false;
-        if(State.extraTurn) {
-            Utils.floatText(State[State.turn.toLowerCase()].pos, "연속 행동!", "lime");
-            Logic.startTurn();
-        } else {
-            State.turn = State.turn === 'P1' ? 'P2' : 'P1';
-            Logic.startTurn();
-        }
-    },
-    endGame: (win) => {
-        const scr = document.getElementById('modal-end');
-        const tit = document.getElementById('end-title');
-        const con = document.getElementById('end-content');
-        scr.style.display = 'flex';
-        if(win) {
-            tit.innerText = "VICTORY"; tit.style.color = "lime";
-            const score = State.p1.gold + (State.turnCnt*10) + State.p1.hp;
-            con.innerHTML = `마왕을 처치했습니다!<br>최종 점수: <span style="color:gold">${score}점</span>`;
-        } else {
-            tit.innerText = "GAME OVER"; tit.style.color = "red";
-            con.innerHTML = "시간이 초과되어 마왕이 세계를 멸망시켰습니다.";
-        }
+        State.turn = State.turn==='P1'?'P2':'P1';
+        Logic.startTurn();
     }
 };
 
-/* --- Setup 객체 통합 및 오류 수정 버전 --- */
+/* ------------------------------------------------------------------
+   UI CONTROLLER
+------------------------------------------------------------------ */
+const UI = {
+    update: () => {
+        // 1. Board Objects
+        document.querySelectorAll('.pawn').forEach(e=>e.remove());
+        const makePawn = (p, cls, icon) => {
+            const t = document.getElementById(`tile-${p.pos}`);
+            if(t) {
+                const el = document.createElement('div'); el.className=`pawn ${cls}`;
+                el.innerHTML = `<div style="font-size:30px; filter:drop-shadow(0 4px 2px black); animation:breath 2s infinite;">${icon}</div>`;
+                t.appendChild(el);
+            }
+        };
+        const p1Icon = State.p1.subJob ? IMG[State.p1.subJob.id] : IMG[State.p1.job];
+        makePawn(State.p1, 'p1', p1Icon);
+        if(!State.aiMerged) makePawn(State.p2, 'p2', IMG.enemy);
+
+        // 2. HUD
+        const renStats = (p, elId) => {
+            const el = document.getElementById(elId);
+            const s = Logic.getStats(p);
+            const icon = p.id === 'P1' ? p1Icon : IMG.enemy;
+            const jobName = p.id === 'P1' ? (p.subJob ? p.subJob.n : CLASSES[p.job].n) : '추격자';
+            const eq = p.equip;
+            
+            // Equipment & Artifacts Row
+            let artsHtml = '';
+            if(p.id==='P1') artsHtml = p.artifacts.map(a => `<div class="art-slot">${a.icon}</div>`).join('');
+
+            el.innerHTML = `
+                <div class="char-header">
+                    <div class="char-icon">${icon}</div>
+                    <div class="char-info"><div class="char-name">${p.name}</div><div class="char-job">${jobName}</div></div>
+                </div>
+                <div class="hp-bar-sm"><div class="hp-fill-sm" style="width:${(p.hp/p.maxHp)*100}%; background:${p.id==='P1'?'var(--p1-color)':'var(--p2-color)'}"></div></div>
+                <div class="stats-row">
+                    <div class="s-item">🦶<span class="s-val">${s.mvMin}~${s.mvMax}</span></div>
+                    <div class="s-item">⚔️<span class="s-val">${s.atMin}~${s.atMax}</span></div>
+                    <div class="s-item">🛡️<span class="s-val">${s.dfMin}~${s.dfMax}</span></div>
+                    <div class="s-item">🍀<span class="s-val">${s.lkMin}~${s.lkMax}</span></div>
+                </div>
+                <div class="equip-tray">
+                    <div class="eq-slot ${eq.s?'filled':''}">${eq.s?eq.s.icon:'👟'}</div>
+                    <div class="eq-slot ${eq.w?'filled':''}">${eq.w?eq.w.icon:'⚔️'}</div>
+                    <div class="eq-slot ${eq.a?'filled':''}">${eq.a?eq.a.icon:'🛡️'}</div>
+                    <div class="eq-slot ${eq.acc?'filled':''}">${eq.acc?eq.acc.icon:'💍'}</div>
+                    ${artsHtml}
+                </div>
+            `;
+        };
+        renStats(State.p1, 'p1-panel');
+        renStats(State.p2, 'p2-panel');
+
+        document.getElementById('ui-lv').innerText = "1"; 
+        document.getElementById('ui-gold').innerText = State.p1.gold;
+        document.getElementById('ui-pot').innerText = State.p1.pot;
+        document.getElementById('boss-hp-bar').style.width = `${(State.boss.hp/State.boss.maxHp)*100}%`;
+        document.getElementById('boss-hp-text').innerText = `마왕 HP: ${State.boss.hp}`;
+    }
+};
+
+/* ------------------------------------------------------------------
+   SETUP (GACHA & DRAG)
+------------------------------------------------------------------ */
 const Setup = {
-    renderClasses: () => {
-        const grid = document.querySelector('.class-grid'); grid.innerHTML = '';
-        for (let k in CLASSES) {
-            const c = CLASSES[k]; const el = document.createElement('div'); el.className = 'class-card';
-            const img = getImgTag(k, 'shop-img', c.i); const imgHtml = img.includes('<img') ? img.replace('shop-img', 'img-asset') : `<div style="font-size:30px">${c.i}</div>`;
-            el.innerHTML = `<div class="c-icon" style="height:60px;">${imgHtml}</div><div class="c-name">${c.n}</div><div class="c-desc">${c.desc}</div>`;
-            el.onclick = () => Setup.selectClass(k); grid.appendChild(el);
-        }
-    },
-    selectClass: (k) => {
-        const p = State.p1; State.keyStat = CLASSES[k].main; p.job = k;
-        if(k==='warrior'){ p.maxHp+=30; p.bonus.atkMax+=2; } 
-        else if(k==='knight'){ p.maxHp+=40; p.bonus.defMax+=2; } 
-        else if(k==='rogue'){ p.gold+=100; p.bonus.luckMax+=2; } 
-        else if(k==='hunter'){ p.bonus.atkMax+=1; p.bonus.moveMax+=1; } 
-        else if(k==='mage'){ p.maxHp-=20; p.bonus.atkMax+=3; } 
-        else if(k==='explorer'){ p.bonus.moveMax+=2; p.pot=2; }
-        p.hp = p.maxHp;
-        document.getElementById('screen-class').style.display = 'none'; document.getElementById('screen-setup').style.display = 'flex';
-        document.getElementById('ui-job').innerText = CLASSES[k].n;
-        const bSk = document.getElementById('btn-skill'); bSk.innerHTML = "<span style='font-size:10px; color:#aaa'>미개방</span><br>스킬"; bSk.disabled = true;
-        
-        State.cards = []; // 초기화
-        for(let i=0; i<100; i++) {
-            let rank = 'common', color='#ccc', stat={mv:[1,3],at:[1,4],df:[1,4],lk:[0,1]};
-            let r = Math.random();
-            if(r < 0.1) { rank='legend'; color='gold'; stat={mv:[3,6], at:[8,12], df:[5,8], lk:[3,5]}; } 
-            else if(r < 0.3) { rank='rare'; color='violet'; stat={mv:[2,5], at:[5,8], df:[3,6], lk:[1,3]}; } 
-            else if(r < 0.6) { rank='uncommon'; color='skyblue'; stat={mv:[2,4], at:[3,6], df:[2,5], lk:[0,2]}; }
-            State.cards.push({ id: i, name: Utils.randArr(FIRST_NAMES)+" "+Utils.randArr(LAST_NAMES), rank, color, move: Utils.rand(stat.mv[0], stat.mv[1]), atk: Utils.rand(stat.at[0], stat.at[1]), def: Utils.rand(stat.df[0], stat.df[1]), luck: Utils.rand(stat.lk[0], stat.lk[1]) });
+    init: () => {
+        const list = document.getElementById('class-list');
+        for(let k in CLASSES) {
+            const c = CLASSES[k];
+            const d = document.createElement('div'); d.className='class-card';
+            d.innerHTML = `<div style="font-size:30px;">${IMG[k]}</div><div style="font-weight:bold; color:white;">${c.n}</div><div style="font-size:11px; color:#888;">${c.desc}</div>`;
+            d.onclick = () => {
+                State.p1.job = k;
+                if(k==='warrior') State.p1.maxHp+=30; else if(k==='knight') State.p1.maxHp+=40; else if(k==='rogue') State.p1.gold+=100; else if(k==='hunter') { State.p1.bonus.atkMax++; State.p1.bonus.moveMax++; } else if(k==='mage') { State.p1.maxHp-=20; State.p1.bonus.atkMax+=3; } else if(k==='explorer') { State.p1.bonus.moveMax+=2; State.p1.pot+=2; }
+                State.p1.hp = State.p1.maxHp;
+                document.getElementById('screen-class').style.display='none';
+                document.getElementById('screen-setup').style.display='flex';
+                
+                // Create random cards
+                for(let i=0; i<40; i++) {
+                     let r = Math.random(), rank='common', color='var(--common)';
+                     let stat = {mv:[1,3], at:[1,4], df:[1,4], lk:[0,1]};
+                     if(r<0.1) { rank='legend'; color='var(--legend)'; stat={mv:[3,6],at:[8,12],df:[5,8],lk:[3,5]}; }
+                     else if(r<0.3) { rank='rare'; color='var(--rare)'; stat={mv:[2,5],at:[5,8],df:[3,6],lk:[1,3]}; }
+                     State.cards.push({ id:i, rank, color, mv:Utils.rand(stat.mv[0], stat.mv[1]), at:Utils.rand(stat.at[0], stat.at[1]), df:Utils.rand(stat.df[0], stat.df[1]), lk:Utils.rand(stat.lk[0], stat.lk[1]) });
+                }
+            };
+            list.appendChild(d);
         }
     },
     summon: () => {
-        if(State.summonCnt >= 4) return;
-        const idx = Utils.rand(0, State.cards.length-1); 
-        const card = State.cards.splice(idx, 1)[0]; 
-        State.hand.push(card); 
-        State.summonCnt++;
-
-        // [강조 로직] 최댓값 찾기
-        const stats = { move: card.move, atk: card.atk, def: card.def, luck: card.luck };
-        const maxVal = Math.max(...Object.values(stats));
-        const getStyle = (val) => val === maxVal ? `color:${card.color}; font-weight:bold;` : `color:#fff; opacity:0.7;`;
-
-        const el = document.createElement('div'); 
-        el.className = `merc-card ${card.rank}`;
-        el.innerHTML = `
-            <div class="merc-name" style="color:${card.color}">${card.name}</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:2px; margin-top:5px;">
-                <div style="${getStyle(card.move)}">🦶${card.move}</div>
-                <div style="${getStyle(card.atk)}">⚔️${card.atk}</div>
-                <div style="${getStyle(card.def)}">🛡️${card.def}</div>
-                <div style="${getStyle(card.luck)}">🍀${card.luck}</div>
-            </div>
-        `;
+        if(State.summonCnt>=4) return;
+        const c = State.cards.splice(Utils.rand(0, State.cards.length-1), 1)[0];
+        State.hand.push(c);
         
-        document.getElementById('gacha-list').appendChild(el); 
+        const el = document.createElement('div'); el.className = `merc-card ${c.rank}`;
+        el.innerHTML = `<div style="color:${c.color}; font-weight:bold;">용병 ${State.summonCnt+1}</div><div>🦶${c.mv} ⚔️${c.at}</div><div>🛡️${c.df} 🍀${c.lk}</div>`;
+        document.getElementById('gacha-view').appendChild(el);
+        
+        State.summonCnt++;
         document.getElementById('btn-summon').innerText = `소환 (${State.summonCnt}/4)`;
         
-        if(State.summonCnt === 4) {
-            document.getElementById('btn-summon').disabled = true;
-            setTimeout(() => { 
-                document.getElementById('gacha-view').style.display='none'; 
-                document.getElementById('place-view').style.display='flex'; 
-                Setup.renderHand(); 
+        if(State.summonCnt===4) {
+            setTimeout(() => {
+                document.getElementById('phase-gacha').style.display='none';
+                document.getElementById('phase-place').style.display='flex';
+                Setup.renderHand();
             }, 800);
         }
     },
     renderHand: () => {
-        const c = document.getElementById('hand'); c.innerHTML = '';
-        State.hand.forEach(card => {
-            const maxVal = Math.max(card.move, card.atk, card.def, card.luck);
-            const getStyle = (val) => val === maxVal ? `color:${card.color}; font-weight:bold;` : `color:#fff;`;
-
-            const d = document.createElement('div'); 
-            d.className = 'dragger'; d.id = `card-${card.id}`; d.draggable = true; 
-            d.style.borderColor = card.color;
-            d.innerHTML = `
-                <div style="font-weight:bold; color:${card.color}; font-size:10px; margin-bottom:3px;">${card.name}</div>
-                <div style="font-size:9px; line-height:1.2;">
-                    <span style="${getStyle(card.move)}">🦶${card.move}</span> <span style="${getStyle(card.atk)}">⚔️${card.atk}</span><br>
-                    <span style="${getStyle(card.def)}">🛡️${card.def}</span> <span style="${getStyle(card.luck)}">🍀${card.luck}</span>
-                </div>
-            `;
-            d.ondragstart = e => e.dataTransfer.setData('cid', card.id); 
-            c.appendChild(d);
+        const con = document.getElementById('hand'); con.innerHTML = '';
+        State.hand.forEach(c => {
+            const d = document.createElement('div'); d.className='dragger'; d.id=`card-${c.id}`; d.draggable=true;
+            d.style.borderColor = c.color;
+            d.innerHTML = `<div style="color:${c.color}; font-weight:bold;">${c.rank=='legend'?'LEG':(c.rank=='rare'?'RARE':'COM')}</div><div>🦶${c.mv}</div><div>⚔️${c.at}</div>`;
+            d.ondragstart = e => e.dataTransfer.setData('cid', c.id);
+            // Mobile Touch Support
+            d.ontouchstart = e => { window.touchCard = c; document.querySelectorAll('.dragger').forEach(x=>x.style.opacity=1); d.style.opacity=0.5; };
+            con.appendChild(d);
         });
-
-        document.querySelectorAll('.stat-slot').forEach(slot => {
-            slot.ondragover = e => e.preventDefault();
-            slot.ondrop = e => {
-                const cid = e.dataTransfer.getData('cid'); 
-                const card = State.hand.find(x => x.id == cid); 
-                const type = slot.dataset.type;
-                for(let k in State.slots) if(State.slots[k] === card) State.slots[k] = null;
-                State.slots[type] = card; 
-                Setup.updateSlots();
-            };
+        
+        document.querySelectorAll('.stat-slot').forEach(s => {
+            s.ondragover = e => e.preventDefault();
+            s.ondrop = e => Setup.place(s, e.dataTransfer.getData('cid'));
+            s.onclick = () => { if(window.touchCard) Setup.place(s, window.touchCard.id); };
         });
     },
+    place: (slot, cid) => {
+        const c = State.hand.find(x => x.id == cid);
+        const type = slot.dataset.type;
+        // clear old
+        for(let k in State.slots) if(State.slots[k]===c) State.slots[k]=null;
+        State.slots[type] = c;
+        window.touchCard = null;
+        Setup.updateSlots();
+    },
     updateSlots: () => {
-        document.querySelectorAll('.dragger').forEach(e => e.classList.remove('placed'));
+        document.querySelectorAll('.dragger').forEach(d=>d.classList.remove('placed'));
         for(let k in State.slots) {
-            const card = State.slots[k]; 
+            const c = State.slots[k];
             const el = document.getElementById(`slot-${k}`);
-            el.classList.remove('filled', 'common', 'uncommon', 'rare', 'legend');
-            
-            if(card) {
-                document.getElementById(`card-${card.id}`).classList.add('placed');
-                el.classList.add('filled', card.rank); 
-                const label = {move:'이동', atk:'공격', def:'방어', luck:'운'}[k];
-                const maxVal = Math.max(card.move, card.atk, card.def, card.luck);
-                const isMax = card[k] === maxVal;
-                const statColor = isMax ? card.color : "#ffffff";
-
-                el.innerHTML = `
-                    <span class="slot-name" style="color:${card.color}">${card.name}</span>
-                    <span style="font-size:11px; color:#aaa; margin-bottom:2px;">${label}</span>
-                    <span style="font-size:24px; font-weight:bold; color:${statColor};">${card[k]}</span>
-                `;
-            } else {
-                const label = {move:'이동', atk:'공격', def:'방어', luck:'운'}[k];
-                el.innerHTML = `<div style="color:#666">${label}<br><span>-</span></div>`;
+            el.className = 'stat-slot'; el.innerHTML = `<div class="slot-label">${{move:'이동',atk:'공격',def:'방어',luck:'운'}[k]}</div><div class="slot-val">-</div>`;
+            if(c) {
+                document.getElementById(`card-${c.id}`).classList.add('placed');
+                el.classList.add('filled'); el.style.borderColor=c.color;
+                const val = k==='move'?c.mv : (k==='atk'?c.at : (k==='def'?c.df : c.lk));
+                el.innerHTML = `<div class="slot-label" style="color:${c.color}">${c.rank}</div><div class="slot-val" style="color:${c.color}">${val}</div>`;
             }
         }
     },
     finish: () => {
-        if(!State.slots.move || !State.slots.atk || !State.slots.def || !State.slots.luck) return alert("모든 슬롯을 채워주세요.");
-        State.p1.stats = { move: State.slots.move.move, atk: State.slots.atk.atk, def: State.slots.def.def, luck: State.slots.luck.luck };
+        if(!Object.values(State.slots).every(x=>x)) return alert("모든 슬롯을 채워주세요.");
+        const s = State.slots;
+        State.p1.stats = { move:s.move.mv, atk:s.atk.at, def:s.def.df, luck:s.luck.lk };
+        
+        // P2 Stats (Remaining Logic)
         let pool = []; for(let i=0; i<4; i++) pool.push(State.cards[Utils.rand(0, State.cards.length-1)]);
-        pool.sort((a,b) => b.atk - a.atk); const ca = pool.shift(); 
-        pool.sort((a,b) => b.def - a.def); const cd = pool.shift(); 
-        pool.sort((a,b) => b.move - a.move); const cm = pool.shift(); 
-        const cl = pool[0];
-        State.p2.stats = { move: cm.move, atk: ca.atk, def: cd.def, luck: cl.luck };
-        document.getElementById('screen-setup').style.display='none'; document.getElementById('screen-game').style.display='flex';
-        Logic.initGame();
+        State.p2.stats = { move:pool[0].mv, atk:pool[1].at, def:pool[2].df, luck:pool[3].lk };
+
+        document.getElementById('screen-setup').style.display='none';
+        document.getElementById('screen-game').style.display='flex';
+        Logic.initBoard();
+        Logic.startTurn();
     }
 };
+
+/* ------------------------------------------------------------------
+   GAME ACTIONS
+------------------------------------------------------------------ */
 const Game = {
-    onSkillBtnClick: () => {
-        if(State.p1.subJob) {
-            if(State.p1.subJob.type === 'active') {
-                if(State.p1.skillCD > 0) Utils.popup("스킬 정보", `<b>${State.p1.subJob.sn}</b><br>${State.p1.subJob.desc}<br><br><span style="color:red">쿨타임 중입니다 (${State.p1.skillCD}턴)</span>`, null);
-                else Utils.popup("스킬 사용", `<b>${State.p1.subJob.sn}</b><br>${State.p1.subJob.desc}<br><br>사용하시겠습니까?`, null, [{txt:"사용", act: Game.useClassSkill}, {txt:"취소", act: ()=>document.getElementById('modal-gen').style.display='none'}]);
-            } else Utils.popup("스킬 정보 (패시브)", `<b>${State.p1.subJob.sn}</b><br>${State.p1.subJob.desc}<br><br>자동으로 적용됩니다.`, null);
+    toggleCamera: () => {
+        State.cameraLocked = !State.cameraLocked;
+        const b = document.getElementById('btn-cam');
+        if(State.cameraLocked) { b.classList.add('active'); b.innerHTML='🎥<br>고정'; Utils.centerCam(State.turn==='P1'?State.p1.pos:State.p2.pos); }
+        else { b.classList.remove('active'); b.innerHTML='🔓<br>자유'; }
+    },
+    roll: async (isAi) => {
+        if(State.isMoving) return;
+        State.isMoving = true;
+        const p = isAi ? State.p2 : State.p1;
+        
+        // Move Step
+        const s = Logic.getStats(p);
+        const steps = Utils.rand(s.mvMin, s.mvMax);
+        Utils.float(p.pos, `🎲 ${steps}`, "cyan");
+        if(p.subJob?.id==='ranger') p.movedSteps = steps;
+
+        for(let i=0; i<steps; i++){
+            if(p.pos >= 49) break;
+            p.pos++; UI.update(); Utils.centerCam(p.pos);
+            await Utils.wait(200);
+            
+            // Interaction Check
+            const enemy = isAi ? State.p1 : State.p2;
+            if(p.pos === enemy.pos && p.pos!==0 && p.pos!==49 && !State.aiMerged) {
+                return Logic.battle(p, enemy, Logic.endTurn);
+            }
+            if(State.monsters[p.pos]) {
+                return Logic.battle(p, null, Logic.endTurn);
+            }
+            if(!isAi && p.pos!==49 && p.pos!==25) { // AI skips events
+               await Logic.handleEvent(p);
+            }
         }
-    },
-    roll: (isAi = false) => {
-        if(!isAi && (State.isMoving || State.isProcessing)) return;
-        State.isMoving = true; State.isProcessing = true; document.getElementById('btn-roll').disabled = true;
-        const p = (State.turn === 'P1') ? State.p1 : State.p2; const s = Logic.getStats(p); const steps = Utils.rand(s.mvMin, s.mvMax);
-        Utils.floatText(p.pos, `${steps}칸`, "white"); Logic.moveStep(p, steps);
-    },
-    useClassSkill: () => {
-        if(State.turn !== 'P1' || State.isMoving || State.isProcessing || State.skillUsedTurn || State.p1.skillCD > 0) return;
-        document.getElementById('modal-gen').style.display='none';
-        if(State.p1.subJob && State.p1.subJob.type === 'active') {
-            State.skillUsedTurn = true; State.p1.skillCD = 3; State.activeSkillEffect = 'fireball'; 
-            Utils.floatText(State.p1.pos, "🔥장전됨", "orange"); UI.update();
-            const bSk = document.getElementById('btn-skill');
-            bSk.innerHTML = `<span style="font-size:10px">[액티브]</span><br>${State.p1.subJob.sn}<br><span style="color:red; font-size:10px">쿨타임 (3)</span>`;
+        
+        if(p.pos === 49) {
+            if(isAi) {
+                State.aiMerged = true; State.boss.hp*=2; State.boss.maxHp*=2; 
+                State.limitTurn=5; Utils.float(49, "보스합체!", "red");
+                alert("추격자가 마왕과 합체했습니다! 5턴 내에 처치하세요!");
+                Logic.endTurn();
+            } else {
+                return Logic.battle(p, null, Logic.endTurn, true);
+            }
+        } else if(p.pos===25 && !isAi && !p.subJob) {
+            Logic.handleEvent(p);
+        } else {
+            Logic.endTurn();
         }
     },
     usePotion: () => {
-        if(State.turn !== 'P1' || State.isMoving || State.isProcessing) return;
-        if(State.p1.pot <= 0 || State.p1.hp >= State.p1.maxHp) return;
-        State.p1.pot--; State.p1.hp = Math.min(State.p1.maxHp, State.p1.hp + 50);
-        if(State.p1.subJob && State.p1.subJob.id === 'alchemist') { State.boss.hp = Math.max(0, State.boss.hp - 10); Utils.floatText(49, "-10HP(독)", "purple"); }
-        Utils.floatText(State.p1.pos, "+50HP", "pink"); UI.update();
+        if(State.turn!=='P1' || State.p1.pot<=0 || State.isMoving) return;
+        State.p1.pot--; State.p1.hp = Math.min(State.p1.maxHp, State.p1.hp+50);
+        if(State.p1.subJob?.id==='alchemist') { State.boss.hp-=10; Utils.float(49,"-10(독)","purple"); }
+        Utils.float(State.p1.pos, "+50 HP", "pink"); UI.update();
     },
-    toggleCamera: () => {
-        State.cameraLocked = !State.cameraLocked; 
-        const btn = document.getElementById('btn-cam');
-        if(State.cameraLocked) {
-            btn.classList.add('active'); btn.innerHTML = "🎥시점고정";
-            const p = (State.turn === 'P1') ? State.p1 : State.p2;
-            Utils.centerCamera(p.pos); Utils.floatText(p.pos, "시점 고정됨", "lime");
+    onSkillBtnClick: () => {
+        if(State.p1.subJob && State.p1.subJob.type === 'active') {
+            if(State.p1.skillCD > 0) return alert(`쿨타임: ${State.p1.skillCD}턴`);
+            if(confirm(`${State.p1.subJob.sn} 사용하시겠습니까?`)) {
+                State.p1.activeSkill = true; State.p1.skillCD = State.p1.subJob.cd;
+                Utils.float(State.p1.pos, "⚡스킬 장전", "yellow");
+            }
         } else {
-            btn.classList.remove('active'); btn.innerHTML = "🔓자유시점";
-            Utils.floatText((State.turn === 'P1' ? State.p1.pos : State.p2.pos), "자유 시점", "white");
+            alert("액티브 스킬이 없습니다 (전직 필요)");
         }
     }
 };
 
 const Shop = {
-    open: () => { 
-        if(State.turn !== 'P1') { return alert("당신의 턴이 아닙니다."); }
-        if(State.isMoving || State.isProcessing) { return alert("행동 중에는 상점을 열 수 없습니다."); }
-        Shop.render(); document.getElementById('modal-shop').style.display='flex'; 
+    open: () => {
+        if(State.turn!=='P1') return;
+        const list = document.getElementById('shop-list'); list.innerHTML='';
+        ITEMS.forEach(it => {
+            const d = document.createElement('div');
+            d.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#21262d; padding:10px; margin-bottom:5px; border-radius:6px;";
+            d.innerHTML = `
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <div style="font-size:24px;">${it.icon}</div>
+                    <div><div style="color:white; font-size:13px; font-weight:bold;">${it.n}</div><div style="color:#888; font-size:11px;">${it.type.toUpperCase()} +${it.val}</div></div>
+                </div>
+                <button class="btn-main" style="width:60px; padding:5px; font-size:12px; margin:0;" onclick="Shop.buy('${it.n}')">${it.cost}</button>
+            `;
+            list.appendChild(d);
+        });
+        document.getElementById('modal-shop').style.display='flex';
     },
     close: () => document.getElementById('modal-shop').style.display='none',
-    
-    render: () => {
-        const c = document.getElementById('shop-items'); c.innerHTML = '';
-        c.innerHTML += `<div class="shop-header-gold">💰 보유: ${State.p1.gold} G</div>`;
-        c.innerHTML += `<div class="shop-grid" id="shop-grid"></div>`;
-        const grid = document.getElementById('shop-grid');
-        const cats = { cons: {n:"🧪 소모품", list:[]}, s: {n:"👟 신발", list:[]}, w: {n:"⚔️ 무기", list:[]}, a: {n:"🛡️ 방어구", list:[]}, acc: {n:"💍 장신구", list:[]} };
-        const makeCard = (icon, name, desc, price, onclick) => {
-            return `<div class="shop-card"><div class="shop-icon">${icon}</div><div class="shop-right-col"><div class="item-name">${name}</div><div class="item-stat">${desc}</div><button class="buy-btn" onclick="${onclick}">${price} G</button></div></div>`;
-        };
-        cats.cons.list.push({ html: makeCard('🧪', '회복 물약', '체력 +50 회복', 50, "Shop.buy('pot', 50)") });
-        cats.cons.list.push({ html: makeCard('🎲', '랜덤 강화', '능력치 랜덤 +1', 100, "Shop.buy('up', 100)") });
-        ITEMS_DB.forEach(item => {
-            const iconDisplay = getImgTag(item.n, 'shop-img', item.icon);
-            const html = makeCard(iconDisplay, item.n, item.desc, item.cost, `Shop.buyItem('${item.n}')`);
-            if(cats[item.type]) cats[item.type].list.push({html});
-        });
-        for(let k in cats) {
-            if(cats[k].list.length > 0) {
-                grid.innerHTML += `<div class="shop-cat-header">${cats[k].n}</div>`;
-                cats[k].list.forEach(i => grid.innerHTML += i.html);
-            }
-        }
-    },
-    buy: (t, cost) => {
-        if(State.p1.gold < cost) return alert("골드가 부족합니다!");
-        State.p1.gold -= cost;
-        if(t==='pot') { State.p1.hp = Math.min(State.p1.maxHp, State.p1.hp + 50); Utils.floatText(State.p1.pos, "+50HP", "pink"); }
-        else if(t==='up') { Logic.applyUpgrade(State.p1, ['move','atk','def','luck'][Utils.rand(0,3)], Math.random()<0.5); }
-        UI.update(); Shop.render();
-    },
-    buyItem: (name) => {
-        const item = ITEMS_DB.find(x => x.n === name);
-        if(State.p1.gold < item.cost) return alert("골드가 부족합니다!");
-        State.p1.gold -= item.cost;
-        const res = Logic.equipItem(State.p1, item); Utils.popup("구매 완료", `${item.n}을(를) 구매했습니다.<br><br>${res.msg}`, null);
-        UI.update(); Shop.render();
+    buy: (n) => {
+        const it = ITEMS.find(x=>x.n===n);
+        if(State.p1.gold >= it.cost) {
+            State.p1.gold -= it.cost; State.p1.equip[it.type] = it;
+            UI.update(); Utils.float(State.p1.pos, "구매완료", "lime");
+        } else alert("골드가 부족합니다.");
     }
 };
 
-const UI = {
-    update: () => {
-        // 1. 기존 말들 제거
-        document.querySelectorAll('.pawn').forEach(e => e.remove());
-
-        const renderPawn = (p, cls, jobKey, icon) => {
-            const targetTile = document.getElementById(`tile-${p.pos}`);
-            if (targetTile) {
-                const wrapper = document.createElement('div');
-                wrapper.className = `pawn ${cls}`;
-                // 이미지를 감싸는 구조로 CSS 애니메이션 최적화
-                wrapper.innerHTML = getImgTag(jobKey, 'pawn-img', icon);
-                targetTile.appendChild(wrapper);
-            }
-        };
-
-        // 유저 렌더링
-        const p1Job = State.p1.subJob ? State.p1.subJob.id : State.p1.job;
-        const p1Icon = State.p1.subJob ? State.p1.subJob.i : CLASSES[State.p1.job].i;
-        renderPawn(State.p1, 'p1', p1Job, p1Icon);
-
-        // AI 렌더링
-        if (!State.aiMerged) {
-            renderPawn(State.p2, 'p2', 'enemy', '👺');
-        }
-
-        // --- 나머지 HUD 업데이트 로직은 동일하게 유지 ---
-        const renP = (p, id) => {
-    const el = document.getElementById(id); const s = Logic.getStats(p);
-    const hpPct = Math.max(0, (p.hp/p.maxHp)*100);
-    const eq = p.equip;
-    
-    // 유저/추격자 공통 장비+유물 한 줄 레이아웃
-    const itemsHtml = `
-        <div class="equip-row">
-            <div class="equip-slot ${eq.s?'filled':''}">${eq.s ? getImgTag(eq.s.n, 'item-img', eq.s.icon) : '👟'}</div>
-            <div class="equip-slot ${eq.w?'filled':''}">${eq.w ? getImgTag(eq.w.n, 'item-img', eq.w.icon) : '⚔️'}</div>
-            <div class="equip-slot ${eq.a?'filled':''}">${eq.a ? getImgTag(eq.a.n, 'item-img', eq.a.icon) : '🛡️'}</div>
-            <div class="equip-slot ${eq.acc?'filled':''}">${eq.acc ? getImgTag(eq.acc.n, 'item-img', eq.acc.icon) : '💍'}</div>
-            ${p.artifacts ? p.artifacts.map(a => `<div class="art-slot">${a.icon}</div>`).join('') : ''}
-        </div>`;
-
-    el.innerHTML = `
-        <div class="stat-line" style="color:white; font-weight:bold;">${p.name} <span class="b-hp-bar">${p.hp}/${p.maxHp}</span></div>
-        <div class="hp-wrap"><div class="hp-fill ${p.id==='P1'?'p1-hp':'p2-hp'}" style="width:${hpPct}%"></div></div>
-        <div class="stat-line"><span>공격</span><span>${s.atMin}~${s.atMax}</span></div>
-        <div class="stat-line"><span>방어</span><span>${s.dfMin}~${s.dfMax}</span></div>
-        ${itemsHtml}`; // 장비창 무조건 표시
-};
-        renP(State.p1, 'hud-p1'); renP(State.p2, 'hud-p2');
-        document.getElementById('ui-gold').innerText = `${State.p1.gold} G`; document.getElementById('ui-lv').innerText = `Lv.${State.p1.lv}`; document.getElementById('ui-pot').innerText = State.p1.pot;
-        const bossHpPct = (State.boss.hp / State.boss.maxHp) * 100;
-        document.getElementById('boss-hp-fill').style.width = `${Math.min(100, Math.max(0, bossHpPct))}%`;
-        document.getElementById('boss-hp-txt').innerText = `마왕 HP: ${State.boss.hp} / ${State.boss.maxHp}`;
-    }
-};
-Setup.renderClasses();
+// Start Game
+Setup.init();
 </script>
 </body>
-
 </html>
-
-
-
-
-
-
-
-
-
-
