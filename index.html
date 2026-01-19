@@ -3,17 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>RPG Board: Complete Edition</title>
+<title>RPG Board: Final Complete</title>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
     /* -------------------------------------------
-       CORE STYLES & VARIABLES
+       CORE STYLES
     ------------------------------------------- */
     :root {
         --bg-color: #0d1117; --panel-bg: #161b22; 
         --text-color: #c9d1d9; --accent: #58a6ff;
         --p1-color: #2ea043; --p2-color: #da3633; --gold: #f2cc60;
-        --common: #c9d1d9; --uncommon: #7ee787; --rare: #a371f7; --legend: #d29922;
+        --rare: #a371f7; --legend: #d29922;
+        --highlight: #39d353;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
     body {
@@ -26,157 +27,111 @@
         display: flex; flex-direction: column; background: var(--bg-color);
         box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
-
-    /* -------------------------------------------
-       ANIMATIONS
-    ------------------------------------------- */
-    @keyframes shake { 0%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
-    .shake-anim { animation: shake 0.3s; }
+    
+    /* Animations */
+    @keyframes breath { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
     @keyframes flash-red { 0%,100%{box-shadow:inset 0 0 0 0 red;} 50%{box-shadow:inset 0 0 50px 20px rgba(255,0,0,0.4);} }
     .flash-damage { animation: flash-red 0.3s linear; }
     @keyframes floatUp { 0%{transform:translateY(0);opacity:1} 100%{transform:translateY(-40px);opacity:0} }
-    .float-text { position: absolute; font-family:'Black Han Sans'; font-size: 16px; text-shadow: 2px 2px 0 #000; animation: floatUp 1.2s forwards; z-index: 999; pointer-events: none; width: 120px; text-align: center; left:50%; margin-left:-60px; }
-    @keyframes breath { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+    .float-text { position: absolute; font-family:'Black Han Sans'; font-size: 16px; text-shadow: 2px 2px 0 #000; animation: floatUp 1.2s forwards; z-index: 999; pointer-events: none; width: 140px; text-align: center; left:50%; margin-left:-70px; }
 
-    /* -------------------------------------------
-       COMMON UI
-    ------------------------------------------- */
+    /* UI Components */
     .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 10; display: none; flex-direction: column; }
     .active-screen { display: flex; }
     .font-header { font-family: 'Do Hyeon', sans-serif; }
-    
     button { cursor: pointer; border: none; outline: none; transition: 0.1s; font-family: 'Do Hyeon'; }
     button:active { transform: scale(0.96); filter: brightness(0.9); }
-    .btn-main {
-        width: 100%; padding: 14px; font-size: 18px; border-radius: 8px;
-        background: linear-gradient(135deg, #1f6feb, #1158c7);
-        color: white; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
+    .btn-main { width: 100%; padding: 14px; font-size: 18px; border-radius: 8px; background: linear-gradient(135deg, #1f6feb, #1158c7); color: white; margin-top: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
     .btn-main:disabled { background: #333; color: #777; box-shadow: none; transform:none; }
 
-    /* -------------------------------------------
-       HUD (CHAR INFO) - Mobile Optimized
-    ------------------------------------------- */
-    #hud {
-        position: absolute; top: 0; left: 0; width: 100%;
-        background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(5px);
-        border-bottom: 1px solid #30363d; padding: 5px; z-index: 50;
-        display: flex; flex-direction: column; gap: 4px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
+    /* HUD */
+    #hud { position: absolute; top: 0; left: 0; width: 100%; background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(5px); border-bottom: 1px solid #30363d; padding: 5px; z-index: 50; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
     .top-info { display: flex; justify-content: space-between; align-items: center; padding: 0 5px; font-size: 12px; color: #8b949e; }
-    
-    .player-hud-grid { display: flex; gap: 5px; height: 120px; } /* 높이 약간 확보 */
-    .p-panel { 
-        flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 6px; 
-        padding: 6px; display: flex; flex-direction: column; justify-content: space-between;
-        position: relative; transition: border-color 0.3s;
-    }
+    .player-hud-grid { display: flex; gap: 5px; height: 120px; }
+    .p-panel { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: border-color 0.3s; }
     .p-panel.active-turn { border: 1px solid var(--gold); box-shadow: inset 0 0 10px rgba(242, 204, 96, 0.1); }
-    
     .char-header { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
-    .char-icon { width: 24px; height: 24px; background: #21262d; border-radius: 4px; display:flex; align-items:center; justify-content:center; font-size:16px; border: 1px solid #30363d; }
+    .char-icon { width: 30px; height: 30px; background: #21262d; border-radius: 4px; display:flex; align-items:center; justify-content:center; font-size:16px; border: 1px solid #30363d; overflow: hidden; }
+    .char-icon img { width: 100%; height: 100%; object-fit: contain; }
     .char-info { display: flex; flex-direction: column; flex: 1; }
     .char-name { font-size: 12px; font-weight: bold; color: var(--text-color); line-height: 1.1; }
     .char-job { font-size: 10px; color: #8b949e; }
-    
-    .hp-bar-sm { width: 100%; height: 6px; background: #0d1117; border-radius: 3px; overflow: hidden; margin: 2px 0; }
-    .hp-fill-sm { height: 100%; transition: width 0.3s; }
-    
     .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 4px; font-size: 10px; color: #c9d1d9; margin-bottom: 2px; }
     .s-item { display: flex; align-items: center; gap: 2px; }
     .s-val { color: var(--text-color); font-family: 'Do Hyeon'; letter-spacing: 0.5px; }
-
     .equip-tray { display: flex; gap: 2px; flex-wrap: wrap; margin-top: auto; }
-    .eq-slot { width: 16px; height: 16px; background: #0d1117; border: 1px solid #30363d; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #484f58; }
+    .eq-slot { width: 16px; height: 16px; background: #0d1117; border: 1px solid #30363d; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #484f58; overflow:hidden; }
     .eq-slot.filled { border-color: #8b949e; color: #fff; }
     .art-slot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; background:#342a08; }
-
     .boss-bar-wrap { height: 20px; background: #222; border: 1px solid #dba6a6; position: relative; border-radius: 4px; overflow: hidden; margin-top: 2px; }
     .boss-hp-fill { height: 100%; background: #da3633; width: 100%; transition: width 0.3s; }
     .boss-text { position:absolute; width:100%; text-align:center; top:0; font-size:11px; color:white; font-weight:bold; line-height:20px; text-shadow:1px 1px 1px black; }
 
-    /* -------------------------------------------
-       BOARD
-    ------------------------------------------- */
+    /* Board */
     #board-container { flex: 1; overflow-x: auto; overflow-y: hidden; background: #010409; position: relative; }
-    #grid { 
-        display: grid; grid-template-columns: repeat(50, 1fr); 
-        height: 100%; width: 3200px; padding-bottom: 80px; align-items: end;
-        background: url('images/map_bg.png') center/cover no-repeat;
-    }
+    #grid { display: grid; grid-template-columns: repeat(50, 1fr); height: 100%; width: 3200px; padding-bottom: 80px; align-items: end; background: url('images/map_bg.png') center/cover no-repeat; }
     .tile { height: 60px; position: relative; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #21262d; font-size: 10px; color: #555; }
-    .tile-start { color: var(--p1-color); font-weight: bold; font-size:12px; }
-    .tile-end { color: var(--p2-color); font-weight: bold; font-size:12px; }
-    .tile-job { border-bottom: 2px solid var(--gold); background: rgba(255, 215, 0, 0.1); }
-    .tile-seal { border-bottom: 2px solid #58a6ff; }
-
-    /* Objects */
+    .tile-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; position: absolute; bottom: 0; z-index: 0; }
+    .tile-txt { z-index: 1; text-shadow: 1px 1px 2px black; font-weight: bold; position: relative; }
     .pawn, .obj-wrap { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 1px; height: 1px; z-index: 20; pointer-events: none; display: flex; justify-content: center; align-items: flex-end; }
-    .pawn-img, .monster-img { width: 60px; height: 60px; object-fit: contain; animation: breath 2s infinite ease-in-out; filter: drop-shadow(0 4px 2px rgba(0,0,0,0.6)); }
+    .game-img-asset { width: 80px; height: 80px; object-fit: contain; animation: breath 2s infinite ease-in-out; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.7)); }
 
-    /* -------------------------------------------
-       CONTROLS
-    ------------------------------------------- */
-    #controls { background: #161b22; border-top: 1px solid #30363d; padding: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
-    .ctrl-row { display: flex; gap: 8px; height: 45px; }
-    .c-btn { flex: 1; background: #21262d; border: 1px solid #30363d; color: #c9d1d9; border-radius: 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
-    .c-btn.active { border-color: var(--gold); background: #342a08; color: var(--gold); }
-    .c-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .roll-btn { background: var(--p1-color); color: white; font-size: 20px; border-radius: 6px; height: 50px; font-weight: bold; box-shadow: 0 4px 0 #1b6629; margin-bottom: 5px; }
-    .roll-btn:active { transform: translateY(4px); box-shadow: none; }
-    .roll-btn:disabled { background: #333; box-shadow: none; color: #555; }
-
-    /* -------------------------------------------
-       MODALS & POPUPS (Redesigned)
-    ------------------------------------------- */
+    /* Modals & Setup */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; }
     .modal-box { width: 90%; max-width: 380px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
     
-    /* Battle Prep & Result */
     .battle-header { text-align: center; font-size: 20px; color: var(--gold); margin-bottom: 10px; text-shadow: 0 2px 4px black; }
     .battle-stage { display: flex; justify-content: space-between; align-items: center; background: #0d1117; padding: 10px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 10px; position: relative; }
     .fighter-card { width: 42%; display: flex; flex-direction: column; align-items: center; text-align: center; }
-    .f-img-box { width: 64px; height: 64px; background: #21262d; border-radius: 8px; border: 2px solid #30363d; margin-bottom: 5px; position: relative; display:flex; align-items:center; justify-content:center; }
+    .f-img-box { width: 70px; height: 70px; background: #21262d; border-radius: 8px; border: 2px solid #30363d; margin-bottom: 5px; position: relative; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    .f-img-box img { width: 100%; height: 100%; object-fit: contain; }
     .f-name { font-size: 12px; font-weight: bold; color: white; margin-bottom: 2px; white-space: nowrap; }
     .f-hp-bar { width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
     .f-hp-fill { height: 100%; width: 100%; transition: width 0.3s; }
     .vs-badge { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #da3633; color: white; font-weight: bold; font-size: 14px; padding: 4px 8px; border-radius: 12px; border: 2px solid #0d1117; z-index: 5; }
-    
     .stat-compare { display: grid; grid-template-columns: 1fr auto 1fr; gap: 5px; font-size: 11px; color: #8b949e; margin-top: 5px; width: 100%; }
     .sc-val { font-family: 'Do Hyeon'; font-size: 13px; color: #c9d1d9; }
     .sc-label { color: #58a6ff; font-weight: bold; }
-    
-    .skill-notice { grid-column: span 3; background: rgba(88, 166, 255, 0.15); border: 1px solid rgba(88, 166, 255, 0.3); border-radius: 4px; padding: 4px; margin-top: 5px; font-size: 11px; color: #58a6ff; display: flex; align-items: center; justify-content: center; gap: 5px; }
-
     .battle-log-area { max-height: 120px; overflow-y: auto; background: #010409; border: 1px solid #30363d; border-radius: 6px; padding: 8px; font-size: 11px; color: #8b949e; margin-bottom: 10px; text-align: left; line-height: 1.4; }
     .log-line { margin-bottom: 2px; border-bottom: 1px dashed #21262d; padding-bottom: 2px; }
     .log-hlt { color: var(--gold); font-weight: bold; }
     .log-dmg { color: var(--p2-color); }
 
-    /* Setup & Gacha */
+    /* Gacha & Setup UI */
+    .gacha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; width: 100%; }
+    .merc-card { background: #1f2428; border: 1px solid #444; border-radius: 6px; padding: 10px; text-align: center; }
+    .merc-card.legend { border-color: var(--legend); background: #291e0a; box-shadow: inset 0 0 10px rgba(210,153,34,0.3); }
+    .merc-card.rare { border-color: var(--rare); background: #1e1529; }
+    .merc-title { font-weight: bold; font-size: 12px; margin-bottom: 8px; color: #ddd; }
+    .merc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; color: white; }
+    .stat-box { display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .stat-val { font-family: 'Do Hyeon'; color: white; }
+    .stat-max { color: var(--highlight); font-weight: bold; font-size: 1.3em; text-shadow: 0 0 8px rgba(57,211,83,0.6); transform: scale(1.1); }
+
+    .hand-container { display: flex; gap: 8px; padding: 10px; background: #0d1117; border: 1px dashed #30363d; border-radius: 8px; margin-bottom: 10px; min-height: 100px; overflow-x: auto; align-items: center; }
+    .dragger { width: 75px; height: 95px; background: #21262d; border: 1px solid #8b949e; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 5px; cursor: grab; flex-shrink: 0; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    .dragger.placed { opacity: 0.3; pointer-events: none; filter: grayscale(1); }
+    .d-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; font-size: 11px; width: 100%; text-align: center; color:white; }
+
+    /* Shop UI */
+    .shop-item { display: flex; align-items: center; background: #21262d; padding: 8px; margin-bottom: 5px; border-radius: 6px; gap: 10px; }
+    .shop-img-box { width: 50px; height: 50px; background: #0d1117; border-radius: 4px; display: flex; align-items: center; justify-content: center; border: 1px solid #30363d; overflow: hidden; flex-shrink: 0; }
+    .shop-img-box img { width: 100%; height: 100%; object-fit: contain; }
+    .shop-info { flex: 1; }
+
+    #controls { background: #161b22; border-top: 1px solid #30363d; padding: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
+    .ctrl-row { display: flex; gap: 8px; height: 45px; }
+    .c-btn { flex: 1; background: #21262d; border: 1px solid #30363d; color: #c9d1d9; border-radius: 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+    .c-btn.active { border-color: var(--gold); background: #342a08; color: var(--gold); }
+    .roll-btn { background: var(--p1-color); color: white; font-size: 20px; border-radius: 6px; height: 50px; font-weight: bold; box-shadow: 0 4px 0 #1b6629; margin-bottom: 5px; }
+    .roll-btn:disabled { background: #333; box-shadow: none; color: #555; }
+
     .class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
     .class-card { background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 10px; text-align: center; }
-    .class-card:hover { border-color: var(--gold); background: #292e36; }
-    
-    .gacha-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; width: 100%; }
-    .merc-card { background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 5px; font-size: 10px; text-align: center; }
-    .merc-card.legend { border-color: var(--legend); box-shadow: inset 0 0 5px rgba(210,153,34,0.3); }
-    .merc-card.rare { border-color: var(--rare); }
-    
-    .hand-container { display: flex; gap: 5px; padding: 10px; background: #0d1117; border: 1px dashed #30363d; border-radius: 8px; margin-bottom: 10px; min-height: 80px; overflow-x: auto; }
-    .dragger { width: 60px; height: 80px; background: #21262d; border: 1px solid #8b949e; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; cursor: grab; flex-shrink: 0; }
-    .dragger.placed { opacity: 0.3; pointer-events: none; }
-    
     .slot-container { display: flex; justify-content: space-around; gap: 5px; margin-bottom: 10px; }
     .stat-slot { width: 70px; height: 90px; background: #0d1117; border: 2px dashed #30363d; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #8b949e; position: relative; }
     .stat-slot.filled { border-style: solid; background: #1f2428; }
-    .slot-label { font-size: 10px; margin-bottom: 5px; }
-    .slot-val { font-size: 18px; font-weight: bold; font-family: 'Do Hyeon'; color: white; }
-    
-    /* Modal Buttons */
     .choice-btn { width: 100%; padding: 10px; background: #21262d; border: 1px solid #30363d; color: white; border-radius: 6px; margin-bottom: 5px; text-align: left; }
-    .choice-btn:hover { background: #30363d; }
 </style>
 </head>
 <body>
@@ -223,11 +178,9 @@
             </div>
             <div id="doom-timer" style="display:none; color:red; text-align:center; font-weight:bold; font-size:12px; margin-top:2px;">D-DAY: 5</div>
         </div>
-
         <div id="board-container">
             <div id="grid"></div>
         </div>
-
         <div id="controls">
             <div class="ctrl-row">
                 <button class="c-btn active" id="btn-cam" onclick="Game.toggleCamera()">🎥<br>고정</button>
@@ -242,7 +195,6 @@
     <div id="modal-gen" class="modal-overlay">
         <div class="modal-box" id="modal-content"></div>
     </div>
-    
     <div id="modal-shop" class="modal-overlay">
         <div class="modal-box" style="height:70%; max-width:400px;">
             <div class="battle-header">🛒 만물상</div>
@@ -254,23 +206,65 @@
 
 <script>
 /* ------------------------------------------------------------------
-   CONSTANTS & DATA
------------------------------------------------------------------- */
-const IMG = {
+   [CONFIG] Image Sources
+   ------------------------------------------------------------------ */
+// ⚠️ 중요: 깃허브 주소의 '파일 이름 앞부분'까지만 넣으세요.
+const GITHUB_URL = "https://raw.githubusercontent.com/kookul14-dotcom/heartofvauar/blob/main/images/"; 
+
+const IMG_FILE_NAMES = {
+    // 직업
+    warrior:'warrior.png', knight:'knight.png', rogue:'rogue.png', 
+    hunter:'hunter.png', mage:'mage.png', explorer:'explorer.png',
+    // 전직
+    berserker:'berserker.png', paladin:'paladin.png',
+    guardian:'guardian.png', avenger:'avenger.png',
+    assassin:'assassin.png', phantom:'phantom.png',
+    sniper:'sniper.png', ranger:'ranger.png',
+    archmage:'archmage.png', warlock:'warlock.png',
+    alchemist:'alchemist.png', pathfinder:'pathfinder.png',
+    // 몬스터
+    slime:'slime.png', goblin:'goblin.png', orc:'orc.png', skeleton:'skeleton.png',
+    zombie:'zombie.png', troll:'troll.png', golem:'golem.png', gargoyle:'gargoyle.png',
+    lich:'lich.png', dragon:'dragon.png', boss:'boss.png', enemy:'enemy.png',
+    // 타일
+    tile_fire:"tile_fire.png", tile_ice:"tile_ice.png", tile_heal:"tile_heal.png", tile_box:"tile_box.png",
+    // 아이템
+    "가죽 부츠":"boots_leather.png", "바람의 신발":"boots_wind.png", "헤르메스 부츠":"boots_hermes.png",
+    "녹슨 검":"sword_rusty.png", "기사의 검":"sword_knight.png", "마법 지팡이":"staff_magic.png",
+    "미스릴 검":"sword_mithril.png",
+    "가죽 갑옷":"armor_leather.png", "판금 갑옷":"armor_plate.png", "성기사의 방패":"shield_paladin.png", "용의 비늘":"armor_dragon.png",
+    "행운 부적":"acc_charm.png", "황금 반지":"acc_goldring.png",
+    "회복 물약":"potion.png", "랜덤 강화":"upgrade.png"
+};
+
+const MON_KEY_MAP = {
+    "슬라임":"slime", "고블린":"goblin", "오크":"orc", "스켈레톤":"skeleton",
+    "좀비":"zombie", "트롤":"troll", "골렘":"golem", "가고일":"gargoyle", "리치":"lich", "드래곤":"dragon"
+};
+
+const EMOJI_BACKUP = {
     warrior:'⚔️', knight:'🛡️', rogue:'🗡️', hunter:'🏹', mage:'🔮', explorer:'🧭',
     berserker:'🩸', paladin:'⛪', guardian:'🏰', avenger:'💢', assassin:'👻', phantom:'🌫️', sniper:'🎯', ranger:'🍃', archmage:'⚡', warlock:'💀', alchemist:'⚗️', pathfinder:'🗺️',
-    monster:'👹', boss:'👿', enemy:'👺'
+    monster:'👹', boss:'👿', enemy:'👺',
+    tile_fire:'🔥', tile_ice:'❄️', tile_heal:'💧', tile_box:'📦',
+    "회복 물약":'🧪', "랜덤 강화":'🎲'
 };
 
+const getIcon = (key) => {
+    if (GITHUB_URL && GITHUB_URL.length > 10 && IMG_FILE_NAMES[key]) {
+        return `<img src="${GITHUB_URL}${IMG_FILE_NAMES[key]}" style="width:100%; height:100%; object-fit:contain;" onerror="this.parentNode.innerHTML='${EMOJI_BACKUP[key]||'❓'}'">`;
+    }
+    return EMOJI_BACKUP[key] || '❓';
+};
+
+/* ------------------------------------------------------------------
+   GAME DATA
+------------------------------------------------------------------ */
 const CLASSES = {
-    warrior: {n:'전사', desc:'체력+30, 공격+2', main:'atk'},
-    knight: {n:'기사', desc:'체력+40, 방어+2', main:'def'},
-    rogue: {n:'도적', desc:'골드+100, 운+2', main:'luck'},
-    hunter: {n:'사냥꾼', desc:'공격+1, 이동+1', main:'atk'},
-    mage: {n:'마법사', desc:'체력-20, 공격+3', main:'atk'},
-    explorer: {n:'탐험가', desc:'이동+2, 물약+2', main:'move'}
+    warrior: {n:'전사', desc:'체력+30, 공격+2'}, knight: {n:'기사', desc:'체력+40, 방어+2'},
+    rogue: {n:'도적', desc:'골드+100, 운+2'}, hunter: {n:'사냥꾼', desc:'공격+1, 이동+1'},
+    mage: {n:'마법사', desc:'체력-20, 공격+3'}, explorer: {n:'탐험가', desc:'이동+2, 물약+2'}
 };
-
 const JOBS = {
     warrior: [ {id:'berserker', n:'광전사', sn:'피의 격노', desc:'HP 소모하여 공격력 2배', type:'passive'}, {id:'paladin', n:'성기사', sn:'신의 가호', desc:'매 턴 체력 회복', type:'passive'} ],
     knight: [ {id:'guardian', n:'가디언', sn:'철벽 방어', desc:'받는 피해 -3', type:'passive'}, {id:'avenger', n:'어벤져', sn:'복수의 칼날', desc:'방어시 데미지 반사', type:'passive'} ],
@@ -279,43 +273,28 @@ const JOBS = {
     mage: [ {id:'archmage', n:'대마법사', sn:'메테오', desc:'고정 피해 20 (쿨타임 3)', type:'active', cd:3}, {id:'warlock', n:'흑마법사', sn:'영혼 착취', desc:'골드 소모 추가 피해', type:'passive'} ],
     explorer: [ {id:'alchemist', n:'연금술사', sn:'독성 투척', desc:'물약 사용 시 적에게 독뎀', type:'passive'}, {id:'pathfinder', n:'개척자', sn:'지름길', desc:'이동 최소값 4 보장', type:'passive'} ]
 };
-
 const ITEMS = [
-    {n:"가죽 부츠", type:"s", val:1, cost:50, icon:"👟", rank:0}, {n:"바람의 신발", type:"s", val:2, cost:100, icon:"👟", rank:1}, {n:"헤르메스 부츠", type:"s", val:4, cost:220, icon:"👟", rank:2},
-    {n:"녹슨 검", type:"w", val:2, cost:50, icon:"⚔️", rank:0}, {n:"기사의 검", type:"w", val:4, cost:120, icon:"⚔️", rank:1}, {n:"마법 지팡이", type:"w", val:6, cost:200, icon:"🔮", rank:2},
-    {n:"가죽 갑옷", type:"a", val:2, cost:50, icon:"🛡️", rank:0}, {n:"판금 갑옷", type:"a", val:4, cost:120, icon:"🛡️", rank:1}, {n:"성기사의 방패", type:"a", val:8, cost:300, icon:"🛡️", rank:2},
-    {n:"행운 부적", type:"acc", val:2, cost:80, icon:"💍", rank:1}, {n:"황금 반지", type:"acc", val:4, cost:150, icon:"💍", rank:2}
+    {n:"가죽 부츠", type:"s", val:1, cost:50, rank:0}, {n:"바람의 신발", type:"s", val:2, cost:100, rank:1}, {n:"헤르메스 부츠", type:"s", val:4, cost:220, rank:2},
+    {n:"녹슨 검", type:"w", val:2, cost:50, rank:0}, {n:"기사의 검", type:"w", val:4, cost:120, rank:1}, {n:"마법 지팡이", type:"w", val:6, cost:200, rank:2}, {n:"미스릴 검", type:"w", val:7, cost:250, rank:3},
+    {n:"가죽 갑옷", type:"a", val:2, cost:50, rank:0}, {n:"판금 갑옷", type:"a", val:4, cost:120, rank:1}, {n:"성기사의 방패", type:"a", val:8, cost:300, rank:2}, {n:"용의 비늘", type:"a", val:6, cost:200, rank:2},
+    {n:"행운 부적", type:"acc", val:2, cost:80, rank:1}, {n:"황금 반지", type:"acc", val:4, cost:150, rank:2}
 ];
-
-const ARTIFACTS = [
-    {id:'vamp', n:'흡혈의 괭이', desc:'공격 시 HP 5 회복', icon:'🩸'},
-    {id:'thorn', n:'가시 갑옷', desc:'피격 시 5 반사', icon:'🌵'},
-    {id:'greed', n:'탐욕의 항아리', desc:'골드 획득 2배', icon:'💰'},
-    {id:'glass', n:'유리 대포', desc:'공격+5, 피격+5', icon:'🍷'},
-    {id:'boots', n:'헤르메스 날개', desc:'이동+1', icon:'👞'},
-    {id:'lucky', n:'네잎클로버', desc:'운+2', icon:'🍀'}
-];
-
+const ARTIFACTS = [ {id:'vamp', n:'흡혈', icon:'🩸'}, {id:'thorn', n:'반사', icon:'🌵'}, {id:'greed', n:'탐욕', icon:'💰'}, {id:'glass', n:'유리', icon:'🍷'}, {id:'boots', n:'신발', icon:'👞'}, {id:'lucky', n:'행운', icon:'🍀'} ];
 const MONSTERS = ["슬라임","고블린","오크","스켈레톤","좀비","트롤","골렘","가고일","리치","드래곤"];
 const MON_STATS = [ {mn:1,mx:5},{mn:2,mx:7},{mn:3,mx:9},{mn:3,mx:11},{mn:3,mx:13},{mn:4,mx:15},{mn:4,mx:17},{mn:5,mx:19},{mn:6,mx:22},{mn:8,mx:25} ];
 
 /* ------------------------------------------------------------------
-   STATE
+   STATE & UTILS
 ------------------------------------------------------------------ */
 let State = {
     p1: { id:'P1', name:'나', job:'warrior', subJob:null, pos:0, hp:100, maxHp:100, gold:0, pot:1, stats:{move:5, atk:5, def:5, luck:2}, bonus:{moveMin:0,moveMax:0,atkMin:0,atkMax:0,defMin:0,defMax:0,luckMin:0,luckMax:0}, equip:{s:null,w:null,a:null,acc:null}, artifacts:[], activeSkill:false, skillCD:0, movedSteps:0 },
     p2: { id:'P2', name:'추격자', job:'enemy', pos:0, hp:100, maxHp:100, gold:0, pot:1, stats:{move:5, atk:5, def:5, luck:2}, bonus:{moveMin:0,moveMax:0,atkMin:0,atkMax:0,defMin:0,defMax:0,luckMin:0,luckMax:0}, equip:{s:null,w:null,a:null,acc:null}, isAi:true },
-    boss: { hp:100, maxHp:100, mn:8, mx:25 },
-    monsters: {},
-    activeSeals: [15, 35],
+    boss: { hp:100, maxHp:100, mn:8, mx:25 }, monsters: {}, activeSeals: [15, 35],
     turn: 'P1', turnCnt: 1, isMoving: false, cameraLocked: true, 
     cards: [], hand: [], summonCnt: 0, slots: {move:null, atk:null, def:null, luck:null},
-    aiMerged: false, limitTurn: 0, frozen: false
+    aiMerged: false, limitTurn: 0, frozen: false, extraTurn: false
 };
 
-/* ------------------------------------------------------------------
-   UTILS
------------------------------------------------------------------- */
 const Utils = {
     rand: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
     wait: (ms) => new Promise(r => setTimeout(r, ms)),
@@ -327,38 +306,22 @@ const Utils = {
     },
     float: (pos, txt, color='white') => {
         const t = document.getElementById(`tile-${pos}`);
-        if(t) {
-            const el = document.createElement('div'); el.className='float-text'; el.style.color=color; el.innerHTML=txt;
-            t.appendChild(el); setTimeout(()=>el.remove(), 1200);
-        }
+        if(t) { const el = document.createElement('div'); el.className='float-text'; el.style.color=color; el.innerText=txt; t.appendChild(el); setTimeout(()=>el.remove(), 1200); }
     },
-    popup: (html) => {
-        const m = document.getElementById('modal-content');
-        m.innerHTML = html;
-        document.getElementById('modal-gen').style.display = 'flex';
-    },
+    popup: (html) => { const m = document.getElementById('modal-content'); m.innerHTML = html; document.getElementById('modal-gen').style.display = 'flex'; },
     closePopup: () => document.getElementById('modal-gen').style.display = 'none'
 };
 
 /* ------------------------------------------------------------------
-   LOGIC CORE
+   LOGIC
 ------------------------------------------------------------------ */
 const Logic = {
     getStats: (p) => {
         const s = p.stats, b = p.bonus, e = p.equip;
         let mv=0, at=0, df=0, lk=0;
         if(e.s) mv+=e.s.val; if(e.w) at+=e.w.val; if(e.a) df+=e.a.val; if(e.acc) lk+=e.acc.val;
-        
-        // 유물 보정
-        if(p.id==='P1') {
-            if(p.artifacts.some(a=>a.id==='boots')) mv+=1;
-            if(p.artifacts.some(a=>a.id==='lucky')) lk+=2;
-            if(p.artifacts.some(a=>a.id==='glass')) at+=5;
-        }
-
-        let minMove = 1 + b.moveMin;
-        if(p.subJob && p.subJob.id === 'pathfinder') minMove = Math.max(4, minMove);
-
+        if(p.id==='P1') { if(p.artifacts.some(a=>a.id==='boots')) mv+=1; if(p.artifacts.some(a=>a.id==='lucky')) lk+=2; if(p.artifacts.some(a=>a.id==='glass')) at+=5; }
+        let minMove = 1 + b.moveMin; if(p.subJob?.id === 'pathfinder') minMove = Math.max(4, minMove);
         return {
             mvMin: minMove, mvMax: Math.max(1, s.move + b.moveMax + mv),
             atMin: 1 + b.atkMin, atMax: Math.max(1, s.atk + b.atkMax + at),
@@ -366,139 +329,106 @@ const Logic = {
             lkMin: 0 + b.luckMin, lkMax: Math.max(0, s.luck + b.luckMax + lk)
         };
     },
-    
     initBoard: () => {
         const g = document.getElementById('grid'); g.innerHTML='';
+        let normalTiles = [];
         for(let i=0; i<50; i++){
             const d=document.createElement('div'); d.className='tile'; d.id=`tile-${i}`;
-            if(i===0) d.classList.add('tile-start'); if(i===49) d.classList.add('tile-end');
-            d.innerText = i===0?'START':(i===49?'BOSS':i);
-            
-            // Map Events Setup
-            if(i===25) { d.classList.add('tile-job'); d.innerHTML = '👑<br>전직'; }
-            else if(State.activeSeals.includes(i)) { d.classList.add('tile-seal'); d.innerHTML = '💎<br>봉인'; }
+            let content = `<span class="tile-txt">${i===0?'START':(i===49?'BOSS':i)}</span>`;
+            let type = '';
+            if(i===0) d.classList.add('tile-start');
+            else if(i===49) d.classList.add('tile-end');
+            else if(i===25) { d.classList.add('tile-job'); content = `<span class="tile-txt">👑<br>전직</span>`; }
+            else if(State.activeSeals.includes(i)) { d.classList.add('tile-seal'); content = `<span class="tile-txt">💎<br>봉인</span>`; }
             else {
-                // Random Tiles
-                if(![0,49,25].includes(i) && !State.activeSeals.includes(i)) {
-                    const r = Math.random();
-                    if(r<0.05) { d.classList.add('tile-fire'); d.innerHTML='🔥'; } // 화염
-                    else if(r<0.10) { d.classList.add('tile-ice'); d.innerHTML='❄️'; } // 얼음
-                    else if(r<0.15) { d.classList.add('tile-heal'); d.innerHTML='💧'; } // 회복
-                    else if(r<0.20) { d.classList.add('tile-event'); d.innerHTML='❓'; } // 이벤트
-                }
+                const r = Math.random();
+                if(r<0.05) type = 'tile_fire'; else if(r<0.10) type = 'tile_ice'; else if(r<0.15) type = 'tile_heal';
+                if(type) {
+                    d.classList.add(type); const icon = getIcon(type);
+                    if(icon.includes('<img')) content = `<div class="tile-img">${icon}</div>`; else content = `<span class="tile-txt">${icon}</span>`;
+                } else normalTiles.push(i);
             }
-            g.appendChild(d);
+            d.innerHTML = content; g.appendChild(d);
         }
-        
+        // [Hidden Box Logic] 50% of Normal Tiles
+        Utils.rand(0,0); normalTiles.sort(()=>Math.random()-0.5);
+        const boxCount = Math.floor(normalTiles.length * 0.5);
+        for(let k=0; k<boxCount; k++) {
+            const idx = normalTiles[k]; const t = document.getElementById(`tile-${idx}`);
+            t.classList.add('tile_box'); 
+            const icon = getIcon('tile_box');
+            if(icon.includes('<img')) t.innerHTML = `<div class="tile-img">${icon}</div>`; else t.innerHTML = `<span class="tile-txt">📦</span>`;
+        }
         // Monsters
-        const spots = [4, 8, 12, 16, 21, 26, 32, 36, 41, 46];
-        spots.forEach((pos, idx) => {
-            const mn = MONSTERS[idx];
-            State.monsters[pos] = { name: mn, mn: MON_STATS[idx].mn, mx: MON_STATS[idx].mx };
+        [4,8,12,16,21,26,32,36,41,46].forEach((pos, idx) => {
+            const mn = MONSTERS[idx]; State.monsters[pos] = { name: mn, mn: MON_STATS[idx].mn, mx: MON_STATS[idx].mx };
             const m = document.createElement('div'); m.className='obj-wrap';
-            m.innerHTML = `<div style="font-size:40px;">${IMG.monster}</div>`; 
+            m.innerHTML = `<div class="game-img-asset">${getIcon(MON_KEY_MAP[mn])}</div>`; 
             document.getElementById(`tile-${pos}`).appendChild(m);
         });
-
         const boss = document.createElement('div'); boss.className='obj-wrap';
-        boss.innerHTML = `<div style="font-size:60px;">${IMG.boss}</div>`;
+        boss.innerHTML = `<div class="game-img-asset" style="width:120px; height:120px;">${getIcon('boss')}</div>`;
         document.getElementById('tile-49').appendChild(boss);
-
-        UI.update();
-        Utils.centerCam(0);
+        UI.update(); Utils.centerCam(0);
     },
-
     startTurn: () => {
         State.isMoving = false;
-        
-        // Doom Timer
         if(State.limitTurn > 0) {
-            State.limitTurn--;
-            const dt = document.getElementById('doom-timer');
-            dt.style.display='block'; dt.innerText = `BOSS D-DAY: ${State.limitTurn}`;
+            State.limitTurn--; const dt = document.getElementById('doom-timer'); dt.style.display='block'; dt.innerText = `BOSS D-DAY: ${State.limitTurn}`;
             if(State.limitTurn <= 0) { alert("Game Over"); location.reload(); return; }
         }
-
         if(State.aiMerged && State.turn === 'P2') State.turn = 'P1';
 
         if(State.turn === 'P1') {
             State.turnCnt++;
-            document.getElementById('p1-panel').classList.add('active-turn');
-            document.getElementById('p2-panel').classList.remove('active-turn');
+            document.getElementById('p1-panel').classList.add('active-turn'); document.getElementById('p2-panel').classList.remove('active-turn');
             document.getElementById('btn-roll').disabled = false;
-            
-            // Skill Cooldown
             if(State.p1.skillCD > 0) State.p1.skillCD--;
-            
-            // Job Passives
             if(State.p1.subJob?.id === 'paladin') { State.p1.hp = Math.min(State.p1.maxHp, State.p1.hp+10); Utils.float(State.p1.pos, "+10HP", "lime"); }
             if(State.p1.artifacts.some(a=>a.id==='greed')) State.p1.gold+=10; else State.p1.gold+=5;
-            
             if(State.frozen) { Utils.float(State.p1.pos, "❄️동상", "cyan"); State.frozen=false; }
-
             document.getElementById('ui-turn').innerText = `Turn ${State.turnCnt}`;
         } else {
-            document.getElementById('p1-panel').classList.remove('active-turn');
-            document.getElementById('p2-panel').classList.add('active-turn');
+            document.getElementById('p1-panel').classList.remove('active-turn'); document.getElementById('p2-panel').classList.add('active-turn');
             document.getElementById('btn-roll').disabled = true;
             State.p2.gold += 10;
             setTimeout(Logic.aiTurn, 800);
         }
         UI.update();
     },
-
     aiTurn: async () => {
-        const p = State.p2;
-        Utils.centerCam(p.pos);
-        // AI Logic: Heal or Shop
-        if(p.hp < p.maxHp * 0.3 && p.pot > 0) {
-            p.pot--; p.hp += 50; Utils.float(p.pos, "물약사용", "pink"); await Utils.wait(500);
-        } else if(p.gold >= 100) {
-             p.gold -= 100; p.stats.atk++; Utils.float(p.pos, "강화", "gold"); await Utils.wait(500);
-        }
+        const p = State.p2; Utils.centerCam(p.pos);
+        if(p.hp < p.maxHp * 0.3 && p.pot > 0) { p.pot--; p.hp += 50; Utils.float(p.pos, "물약사용", "pink"); await Utils.wait(500); } 
+        else if(p.gold >= 100) { p.gold -= 100; p.stats.atk++; Utils.float(p.pos, "강화", "gold"); await Utils.wait(500); }
         Game.roll(true);
     },
-
-    // --- BATTLE SYSTEM ---
     battle: (atk, def, onEnd, isBoss=false) => {
         const isPvP = !!def;
         const defName = isBoss ? "마왕" : (isPvP ? def.name : State.monsters[atk.pos].name);
         const sAtk = Logic.getStats(atk);
         
         let dMin=0, dMax=0, dLMin=0, dLMax=0, hpCur=0, hpMax=0;
-        if(isBoss) {
-            dMin = State.boss.mn; dMax = State.boss.mx; hpCur = State.boss.hp; hpMax = State.boss.maxHp;
-        } else if(isPvP) {
-            const sDef = Logic.getStats(def);
-            dMin = sDef.dfMin; dMax = sDef.dfMax; dLMin=sDef.lkMin; dLMax=sDef.lkMax;
-            hpCur = def.hp; hpMax = def.maxHp;
-        } else {
-            const m = State.monsters[atk.pos];
-            dMin = m.mn; dMax = m.mx; hpCur = 50; hpMax = 50; 
-        }
+        if(isBoss) { dMin = State.boss.mn; dMax = State.boss.mx; hpCur = State.boss.hp; hpMax = State.boss.maxHp; } 
+        else if(isPvP) { const sDef = Logic.getStats(def); dMin = sDef.dfMin; dMax = sDef.dfMax; dLMin=sDef.lkMin; dLMax=sDef.lkMax; hpCur = def.hp; hpMax = def.maxHp; } 
+        else { const m = State.monsters[atk.pos]; dMin = m.mn; dMax = m.mx; hpCur = 50; hpMax = 50; }
 
-        const atkIcon = atk.id==='P1' ? (atk.subJob ? IMG[atk.subJob.id] : IMG[atk.job]) : IMG.enemy;
-        const defIcon = isBoss ? IMG.boss : (isPvP ? (def.id==='P2'?IMG.enemy:IMG[def.job]) : IMG.monster);
-
-        // Active Skill Check
+        const atkIcon = atk.id==='P1' ? (atk.subJob ? getIcon(atk.subJob.id) : getIcon(atk.job)) : getIcon('enemy');
+        const defIcon = isBoss ? getIcon('boss') : (isPvP ? (def.id==='P2'?getIcon('enemy'):getIcon(def.job)) : getIcon(MON_KEY_MAP[State.monsters[atk.pos].name]));
         const activeSkill = (atk.id==='P1' && State.p1.activeSkill) ? State.p1.subJob : null;
 
-        // 1. Battle Prep UI
         const showPrep = () => {
             const skillHtml = activeSkill ? `<div class="skill-notice">⚡ <b>${activeSkill.sn}</b> 발동!</div>` : '';
             Utils.popup(`
                 <div class="battle-header">${isBoss?'☠️ 보스전':(isPvP?'⚔️ 결투':'👹 전투')}</div>
                 <div class="battle-stage">
                     <div class="fighter-card">
-                        <div class="f-img-box"><div style="font-size:40px;">${atkIcon}</div></div>
-                        <div class="f-name">${atk.name}</div>
+                        <div class="f-img-box">${atkIcon}</div><div class="f-name">${atk.name}</div>
                         <div class="f-hp-bar"><div class="f-hp-fill" style="width:${(atk.hp/atk.maxHp)*100}%; background:var(--p1-color);"></div></div>
                         <div class="stat-compare"><span class="sc-label">ATK</span> <span class="sc-val">${sAtk.atMin}~${sAtk.atMax}</span></div>
                     </div>
                     <div class="vs-badge">VS</div>
                     <div class="fighter-card">
-                        <div class="f-img-box" style="border-color:#da3633"><div style="font-size:40px;">${defIcon}</div></div>
-                        <div class="f-name">${defName}</div>
+                        <div class="f-img-box" style="border-color:#da3633">${defIcon}</div><div class="f-name">${defName}</div>
                         <div class="f-hp-bar"><div class="f-hp-fill" style="width:${(hpCur/hpMax)*100}%; background:var(--p2-color);"></div></div>
                         <div class="stat-compare"><span class="sc-val">${dMin}~${dMax}</span> <span class="sc-label" style="color:#da3633">DEF</span></div>
                     </div>
@@ -506,271 +436,192 @@ const Logic = {
                 </div>
                 <button class="btn-main" id="btn-fight-start">⚔️ 전투 시작</button>
             `);
-            
-            if(atk.isAi) setTimeout(runBattle, 1500);
-            else document.getElementById('btn-fight-start').onclick = runBattle;
+            if(atk.isAi) setTimeout(runBattle, 1500); else document.getElementById('btn-fight-start').onclick = runBattle;
         };
 
-        // 2. Battle Logic & Result UI
         const runBattle = () => {
             let log = [];
             let rawAtk = Utils.rand(sAtk.atMin, sAtk.atMax);
             let luckAtk = Utils.rand(sAtk.lkMin, sAtk.lkMax);
-            
-            // Passives (Attack)
             if(atk.id==='P1') {
                 if(atk.subJob?.id === 'assassin') luckAtk *= 2; 
                 if(atk.subJob?.id === 'ranger') rawAtk += atk.movedSteps;
                 if(atk.subJob?.id === 'berserker' && atk.hp > 25) { atk.hp-=25; rawAtk*=2; log.push("피의 격노 (HP-25, 공2배)"); }
                 if(activeSkill?.id === 'archmage') { rawAtk = 20; luckAtk = 0; log.push("메테오 스트라이크!"); }
+                if(atk.subJob?.id === 'warlock' && atk.gold >= 50) { atk.gold-=50; rawAtk+=15; log.push("영혼 착취 (+15뎀)"); }
             }
-
             let totalAtk = rawAtk + luckAtk;
             let rawDef = Utils.rand(dMin, dMax);
             let luckDef = Utils.rand(dLMin, dLMax);
             let totalDef = rawDef + luckDef;
-
-            // Passives (Def)
-            if(def && def.id==='P1') {
-                 if(def.artifacts.some(a=>a.id==='glass')) totalDef -= 5;
-            }
+            if(def && def.id==='P1' && def.artifacts.some(a=>a.id==='glass')) totalDef -= 5;
             if(atk.id==='P1' && atk.subJob?.id === 'sniper') { totalDef = Math.floor(totalDef/2); log.push("약점 포착 (관통)"); }
 
-            // Combat Result
             let win = totalAtk >= totalDef;
             let dmg = 0, selfDmg = 0;
-            
-            // Evasion
-            if(!win && def && def.id==='P1' && def.subJob?.id==='phantom' && Math.random()<0.3) {
-                log.push("그림자 망토: 회피!"); totalAtk=0;
-            }
+            if(!win && def && def.id==='P1' && def.subJob?.id==='phantom' && Math.random()<0.3) { log.push("그림자 망토: 회피!"); totalAtk=0; }
 
             if(win) {
                 dmg = isPvP || isBoss ? Math.max(1, totalAtk - Math.floor(totalDef/2)) : 100;
                 selfDmg = (isBoss || isPvP) ? Math.floor(totalDef * 0.2) : 0;
-                
                 if(atk.id==='P1' && atk.subJob?.id==='guardian') selfDmg = Math.max(0, selfDmg-3);
-                
                 log.push(`<span class="log-hlt">승리!</span> 공격 ${totalAtk} vs 방어 ${totalDef}`);
                 log.push(`적에게 <span class="log-dmg">${dmg}</span> 피해!`);
+                if(isPvP) { State.extraTurn = true; log.push("⚡ 연속 행동 기회 획득!"); }
             } else {
                 selfDmg = Math.max(1, totalDef - totalAtk);
+                if(def && def.id==='P1' && def.subJob?.id==='avenger') {
+                    let ref = Math.floor(totalDef*0.5); atk.hp-=ref; log.push(`복수의 칼날: ${ref} 반사!`);
+                }
                 if(def && def.id==='P1' && def.artifacts.some(a=>a.id==='thorn')) { atk.hp-=5; log.push("가시갑옷 반사 -5HP"); }
                 log.push(`<span style="color:#da3633">패배..</span> 반동 ${selfDmg} 피해`);
+                if(isPvP) { State.extraTurn = true; log.push("⚡ 적의 연속 행동!"); }
             }
 
-            // Apply Damage
-            if(isBoss) State.boss.hp = Math.max(0, State.boss.hp - dmg);
-            else if(isPvP) def.hp = Math.max(0, def.hp - dmg);
-            
+            if(isBoss) State.boss.hp = Math.max(0, State.boss.hp - dmg); else if(isPvP) def.hp = Math.max(0, def.hp - dmg);
             atk.hp = Math.max(0, atk.hp - selfDmg);
             if(atk.id==='P1') State.p1.activeSkill = false;
-            
-            // Vamp
             if(atk.id==='P1' && atk.artifacts.some(a=>a.id==='vamp')) { atk.hp+=5; log.push("흡혈 +5HP"); }
 
-            // Result UI
             Utils.popup(`
                 <div class="battle-header">${win ? '<span style="color:lime">VICTORY</span>' : '<span style="color:red">DEFEAT</span>'}</div>
                 <div class="battle-stage">
                     <div class="fighter-card">
-                        <div class="f-img-box"><div style="font-size:40px;">${atkIcon}</div></div>
+                        <div class="f-img-box">${atkIcon}</div><div class="f-name">${atk.name}</div>
                         <div class="f-hp-bar"><div class="f-hp-fill" style="width:${(atk.hp/atk.maxHp)*100}%; background:var(--p1-color);"></div></div>
                         <div class="f-name">${atk.hp} / ${atk.maxHp}</div>
                     </div>
                     <div class="fighter-card">
-                        <div class="f-img-box" style="border-color:#da3633"><div style="font-size:40px;">${defIcon}</div></div>
-                        <div class="f-hp-bar"><div class="f-hp-fill" style="width:${(isBoss?State.boss.hp : (isPvP?def.hp:0)) / (isBoss?State.boss.maxHp:(isPvP?def.maxHp:100))*100}%; background:var(--p2-color);"></div></div>
+                        <div class="f-img-box" style="border-color:#da3633">${defIcon}</div><div class="f-hp-bar"><div class="f-hp-fill" style="width:${(isBoss?State.boss.hp : (isPvP?def.hp:0)) / (isBoss?State.boss.maxHp:(isPvP?def.maxHp:100))*100}%; background:var(--p2-color);"></div></div>
                         <div class="f-name">${isBoss?State.boss.hp:(isPvP?def.hp:'DEAD')}</div>
                     </div>
                 </div>
-                <div class="battle-log-area">
-                    ${log.map(l => `<div class="log-line">${l}</div>`).join('')}
-                </div>
+                <div class="battle-log-area">${log.map(l => `<div class="log-line">${l}</div>`).join('')}</div>
                 <button class="btn-main" id="btn-close-battle">확인</button>
             `);
-
-            // Float Text
             if(dmg>0) Utils.float(isBoss?49:(isPvP?def.pos:atk.pos), `-${dmg}`, "red");
             if(selfDmg>0) Utils.float(atk.pos, `-${selfDmg}`, "red");
-
-            // Post Battle
-            if(win && !isBoss && !isPvP) {
-                delete State.monsters[atk.pos];
-                const t = document.getElementById(`tile-${atk.pos}`);
-                if(t.querySelector('.obj-wrap')) t.querySelector('.obj-wrap').remove();
-                atk.gold += Utils.rand(30,60);
-            }
-
+            if(win && !isBoss && !isPvP) { delete State.monsters[atk.pos]; document.getElementById(`tile-${atk.pos}`).querySelector('.obj-wrap').remove(); atk.gold += Utils.rand(30,60); }
             UI.update();
-            const closeAct = () => { Utils.closePopup(); onEnd(); };
-            if(atk.isAi) setTimeout(closeAct, 2000);
-            else document.getElementById('btn-close-battle').onclick = closeAct;
+            const closeAct = () => { 
+                Utils.closePopup(); 
+                if(State.extraTurn) {
+                    State.extraTurn = false; Utils.float(atk.pos, "연속 행동!", "lime");
+                    if(atk.isAi) setTimeout(Logic.aiTurn, 1000); else document.getElementById('btn-roll').disabled = false;
+                } else { onEnd(); }
+            };
+            if(atk.isAi) setTimeout(closeAct, 2000); else document.getElementById('btn-close-battle').onclick = closeAct;
         };
         showPrep();
     },
-
     handleEvent: (p) => {
         return new Promise(resolve => {
             const t = document.getElementById(`tile-${p.pos}`);
-            // Fire
-            if(t.classList.contains('tile-fire')) { 
-                p.hp -= 10; Utils.float(p.pos, "-10HP", "orange"); 
-                resolve();
-            }
-            // Ice
-            else if(t.classList.contains('tile-ice')) {
-                Utils.float(p.pos, "동상", "cyan"); if(p.id==='P1') State.frozen=true;
-                resolve();
-            }
-            // Heal
-            else if(t.classList.contains('tile-heal')) {
-                p.hp = Math.min(p.maxHp, p.hp+20); Utils.float(p.pos, "+20HP", "lime");
-                resolve();
-            }
-            // Random Box
-            else if(t.classList.contains('tile-event') && p.id==='P1') {
+            if(t.classList.contains('tile_fire')) { p.hp -= 10; Utils.float(p.pos, "-10HP", "orange"); resolve(); }
+            else if(t.classList.contains('tile_ice')) { Utils.float(p.pos, "동상", "cyan"); if(p.id==='P1') State.frozen=true; resolve(); }
+            else if(t.classList.contains('tile_heal')) { p.hp = Math.min(p.maxHp, p.hp+20); Utils.float(p.pos, "+20HP", "lime"); resolve(); }
+            // [HIDDEN BOX LOGIC]
+            else if(t.classList.contains('tile_box') && p.id==='P1') {
                 Utils.popup(`
-                    <h3 style="color:var(--gold)">오래된 상자</h3>
-                    <div style="text-align:center; color:#ddd; margin-bottom:10px;">무엇이 들어있을까요?</div>
-                    <button class="choice-btn" id="evt-open">연다</button>
-                    <button class="choice-btn" id="evt-pass">지나간다</button>
+                    <h3 style="color:var(--gold); text-align:center;">숨겨진 상자 발견!</h3>
+                    <div style="text-align:center; color:#ddd; margin-bottom:10px;">상자를 열어보시겠습니까?</div>
+                    <button class="choice-btn" id="box-open">연다</button><button class="choice-btn" id="box-pass">지나간다</button>
                 `);
-                document.getElementById('evt-open').onclick = () => {
-                    const r = Math.random();
+                document.getElementById('box-open').onclick = () => {
+                    const r = Math.random() * 100;
                     let msg = "";
-                    if(r<0.4) {
-                        const it = ITEMS[Utils.rand(0, ITEMS.length-1)];
-                        p.equip[it.type] = it; msg = `${it.n} 획득!`;
-                    } else {
-                        p.gold += 50; msg = "50골드 획득!";
+                    if(r < 30) { // Equip
+                        let rank=0; const r2=Math.random()*100;
+                        if(r2<50) rank=0; else if(r2<80) rank=1; else if(r2<95) rank=2; else rank=3; // Common, Uncommon, Rare, Legend (NEW)
+                        const pool = ITEMS.filter(i=>i.rank===rank);
+                        const it = pool[Utils.rand(0, pool.length-1)] || ITEMS[0];
+                        p.equip[it.type] = it; msg = `<span style="color:lime">${it.n} 획득!</span>`;
+                    } else if (r < 60) { // Gold
+                        const g = Utils.rand(20,100); p.gold+=g; msg = `<span style="color:gold">+${g} 골드</span>`;
+                    } else if (r < 90) { // Stat
+                        const stat = ['move','atk','def','luck'][Utils.rand(0,3)];
+                        const val = [-1,1,2][Utils.rand(0,2)];
+                        p.stats[stat] = Math.max(0, p.stats[stat]+val);
+                        msg = `능력치 ${stat.toUpperCase()} ${val>0?'+':''}${val}`;
+                    } else if (r < 95) { // Bomb
+                        const dmg = Utils.rand(10,20); p.hp-=dmg; msg = `<span style="color:red">폭탄! -${dmg}HP</span>`;
+                    } else { // Theft
+                        const loss = Utils.rand(10,50); p.gold = Math.max(0, p.gold-loss); msg = `<span style="color:gray">도난! -${loss}G</span>`;
                     }
-                    Utils.popup(`<div style="text-align:center; padding:20px;">${msg}</div>`);
-                    setTimeout(() => { Utils.closePopup(); resolve(); }, 1000);
+                    Utils.popup(`<div style="text-align:center; font-size:18px; padding:20px;">${msg}</div>`);
+                    t.classList.remove('tile_box'); 
+                    // Update visual to show opened
+                    const icon = getIcon('tile_box'); 
+                    if(!icon.includes('<img')) t.innerHTML = `<span class="tile-txt" style="color:#555">📭</span>`; // Empty
+                    setTimeout(() => { Utils.closePopup(); resolve(); }, 1200);
                 };
-                document.getElementById('evt-pass').onclick = () => { Utils.closePopup(); resolve(); };
+                document.getElementById('box-pass').onclick = () => { Utils.closePopup(); resolve(); };
             }
-            // Job Site
             else if(p.pos === 25 && p.id === 'P1' && !p.subJob) {
                 const choices = JOBS[p.job].map(j => `<button class="choice-btn" onclick="Logic.jobChange('${j.id}')"><b>${j.n}</b><br><span style="font-size:10px">${j.desc}</span></button>`).join('');
-                Utils.popup(`<h3 style="color:var(--gold)">전직소</h3>${choices}`);
-                // resolve handled in jobChange
+                Utils.popup(`<h3 style="color:var(--gold); text-align:center;">전직소</h3>${choices}`);
             }
-            // Seal
             else if(State.activeSeals.includes(p.pos)) {
-                State.activeSeals = State.activeSeals.filter(s => s!==p.pos);
-                t.classList.remove('tile-seal'); t.innerHTML = p.pos;
+                State.activeSeals = State.activeSeals.filter(s => s!==p.pos); t.classList.remove('tile-seal'); t.innerHTML = `<span class="tile-txt">${p.pos}</span>`;
                 if(p.id==='P1') {
                     State.boss.hp = Math.floor(State.boss.hp*0.8);
-                    const art = ARTIFACTS[Utils.rand(0, ARTIFACTS.length-1)];
-                    p.artifacts.push(art);
+                    const art = ARTIFACTS[Utils.rand(0, ARTIFACTS.length-1)]; p.artifacts.push(art);
                     Utils.popup(`<div style="text-align:center;">봉인 해제!<br>보스 체력 감소 & <span style="color:var(--gold)">${art.n}</span> 획득</div>`);
                     setTimeout(() => { Utils.closePopup(); resolve(); }, 1500);
-                } else {
-                    State.boss.hp += 20; Utils.float(p.pos, "봉인파괴(보스강화)", "red");
-                    resolve();
-                }
-            }
-            else resolve();
+                } else { State.boss.hp += 20; Utils.float(p.pos, "봉인파괴(보스강화)", "red"); resolve(); }
+            } else resolve();
         });
     },
-
     jobChange: (jid) => {
-        const job = JOBS[State.p1.job].find(j=>j.id===jid);
-        State.p1.subJob = job;
-        State.p1.maxHp += 20; State.p1.hp = State.p1.maxHp;
-        State.p1.bonus.atkMax += 2; State.p1.bonus.defMax += 2;
-        Utils.closePopup();
-        Logic.endTurn();
+        State.p1.subJob = JOBS[State.p1.job].find(j=>j.id===jid);
+        State.p1.maxHp += 20; State.p1.hp = State.p1.maxHp; State.p1.bonus.atkMax += 2; State.p1.bonus.defMax += 2;
+        Utils.closePopup(); Logic.endTurn();
     },
-
     endTurn: () => {
-        State.turn = State.turn==='P1'?'P2':'P1';
-        Logic.startTurn();
+        State.turn = State.turn==='P1'?'P2':'P1'; Logic.startTurn();
     }
 };
 
-/* ------------------------------------------------------------------
-   UI CONTROLLER
------------------------------------------------------------------- */
 const UI = {
     update: () => {
-        // 1. Board Objects
         document.querySelectorAll('.pawn').forEach(e=>e.remove());
         const makePawn = (p, cls, icon) => {
             const t = document.getElementById(`tile-${p.pos}`);
-            if(t) {
-                const el = document.createElement('div'); el.className=`pawn ${cls}`;
-                el.innerHTML = `<div style="font-size:30px; filter:drop-shadow(0 4px 2px black); animation:breath 2s infinite;">${icon}</div>`;
-                t.appendChild(el);
-            }
+            if(t) { const el = document.createElement('div'); el.className=`pawn ${cls}`; el.innerHTML = `<div class="game-img-asset">${icon}</div>`; t.appendChild(el); }
         };
-        const p1Icon = State.p1.subJob ? IMG[State.p1.subJob.id] : IMG[State.p1.job];
-        makePawn(State.p1, 'p1', p1Icon);
-        if(!State.aiMerged) makePawn(State.p2, 'p2', IMG.enemy);
+        const p1Icon = State.p1.subJob ? getIcon(State.p1.subJob.id) : getIcon(State.p1.job);
+        makePawn(State.p1, 'p1', p1Icon); if(!State.aiMerged) makePawn(State.p2, 'p2', getIcon('enemy'));
 
-        // 2. HUD
         const renStats = (p, elId) => {
-            const el = document.getElementById(elId);
-            const s = Logic.getStats(p);
-            const icon = p.id === 'P1' ? p1Icon : IMG.enemy;
+            const el = document.getElementById(elId); const s = Logic.getStats(p);
+            const icon = p.id === 'P1' ? p1Icon : getIcon('enemy');
             const jobName = p.id === 'P1' ? (p.subJob ? p.subJob.n : CLASSES[p.job].n) : '추격자';
-            const eq = p.equip;
-            
-            // Equipment & Artifacts Row
-            let artsHtml = '';
-            if(p.id==='P1') artsHtml = p.artifacts.map(a => `<div class="art-slot">${a.icon}</div>`).join('');
-
+            let artsHtml = ''; if(p.id==='P1') artsHtml = p.artifacts.map(a => `<div class="art-slot">${a.icon}</div>`).join('');
             el.innerHTML = `
-                <div class="char-header">
-                    <div class="char-icon">${icon}</div>
-                    <div class="char-info"><div class="char-name">${p.name}</div><div class="char-job">${jobName}</div></div>
-                </div>
+                <div class="char-header"><div class="char-icon">${icon}</div><div class="char-info"><div class="char-name">${p.name}</div><div class="char-job">${jobName}</div></div></div>
                 <div class="hp-bar-sm"><div class="hp-fill-sm" style="width:${(p.hp/p.maxHp)*100}%; background:${p.id==='P1'?'var(--p1-color)':'var(--p2-color)'}"></div></div>
-                <div class="stats-row">
-                    <div class="s-item">🦶<span class="s-val">${s.mvMin}~${s.mvMax}</span></div>
-                    <div class="s-item">⚔️<span class="s-val">${s.atMin}~${s.atMax}</span></div>
-                    <div class="s-item">🛡️<span class="s-val">${s.dfMin}~${s.dfMax}</span></div>
-                    <div class="s-item">🍀<span class="s-val">${s.lkMin}~${s.lkMax}</span></div>
-                </div>
-                <div class="equip-tray">
-                    <div class="eq-slot ${eq.s?'filled':''}">${eq.s?eq.s.icon:'👟'}</div>
-                    <div class="eq-slot ${eq.w?'filled':''}">${eq.w?eq.w.icon:'⚔️'}</div>
-                    <div class="eq-slot ${eq.a?'filled':''}">${eq.a?eq.a.icon:'🛡️'}</div>
-                    <div class="eq-slot ${eq.acc?'filled':''}">${eq.acc?eq.acc.icon:'💍'}</div>
-                    ${artsHtml}
-                </div>
+                <div class="stats-row"><div class="s-item">🦶<span class="s-val">${s.mvMin}~${s.mvMax}</span></div><div class="s-item">⚔️<span class="s-val">${s.atMin}~${s.atMax}</span></div><div class="s-item">🛡️<span class="s-val">${s.dfMin}~${s.dfMax}</span></div><div class="s-item">🍀<span class="s-val">${s.lkMin}~${s.lkMax}</span></div></div>
+                <div class="equip-tray"><div class="eq-slot ${p.equip.s?'filled':''}">${p.equip.s?getIcon(p.equip.s.n):'👟'}</div><div class="eq-slot ${p.equip.w?'filled':''}">${p.equip.w?getIcon(p.equip.w.n):'⚔️'}</div><div class="eq-slot ${p.equip.a?'filled':''}">${p.equip.a?getIcon(p.equip.a.n):'🛡️'}</div><div class="eq-slot ${p.equip.acc?'filled':''}">${p.equip.acc?getIcon(p.equip.acc.n):'💍'}</div>${artsHtml}</div>
             `;
         };
-        renStats(State.p1, 'p1-panel');
-        renStats(State.p2, 'p2-panel');
-
-        document.getElementById('ui-lv').innerText = "1"; 
-        document.getElementById('ui-gold').innerText = State.p1.gold;
-        document.getElementById('ui-pot').innerText = State.p1.pot;
-        document.getElementById('boss-hp-bar').style.width = `${(State.boss.hp/State.boss.maxHp)*100}%`;
-        document.getElementById('boss-hp-text').innerText = `마왕 HP: ${State.boss.hp}`;
+        renStats(State.p1, 'p1-panel'); renStats(State.p2, 'p2-panel');
+        document.getElementById('ui-lv').innerText = "1"; document.getElementById('ui-gold').innerText = State.p1.gold; document.getElementById('ui-pot').innerText = State.p1.pot;
+        document.getElementById('boss-hp-bar').style.width = `${(State.boss.hp/State.boss.maxHp)*100}%`; document.getElementById('boss-hp-text').innerText = `마왕 HP: ${State.boss.hp}`;
     }
 };
 
-/* ------------------------------------------------------------------
-   SETUP (GACHA & DRAG)
------------------------------------------------------------------- */
 const Setup = {
     init: () => {
         const list = document.getElementById('class-list');
         for(let k in CLASSES) {
             const c = CLASSES[k];
             const d = document.createElement('div'); d.className='class-card';
-            d.innerHTML = `<div style="font-size:30px;">${IMG[k]}</div><div style="font-weight:bold; color:white;">${c.n}</div><div style="font-size:11px; color:#888;">${c.desc}</div>`;
+            d.innerHTML = `<div style="font-size:30px;">${getIcon(k)}</div><div style="font-weight:bold; color:white;">${c.n}</div><div style="font-size:11px; color:#888;">${c.desc}</div>`;
             d.onclick = () => {
                 State.p1.job = k;
                 if(k==='warrior') State.p1.maxHp+=30; else if(k==='knight') State.p1.maxHp+=40; else if(k==='rogue') State.p1.gold+=100; else if(k==='hunter') { State.p1.bonus.atkMax++; State.p1.bonus.moveMax++; } else if(k==='mage') { State.p1.maxHp-=20; State.p1.bonus.atkMax+=3; } else if(k==='explorer') { State.p1.bonus.moveMax+=2; State.p1.pot+=2; }
                 State.p1.hp = State.p1.maxHp;
-                document.getElementById('screen-class').style.display='none';
-                document.getElementById('screen-setup').style.display='flex';
-                
-                // Create random cards
+                document.getElementById('screen-class').style.display='none'; document.getElementById('screen-setup').style.display='flex';
                 for(let i=0; i<40; i++) {
                      let r = Math.random(), rank='common', color='var(--common)';
                      let stat = {mv:[1,3], at:[1,4], df:[1,4], lk:[0,1]};
@@ -784,84 +635,61 @@ const Setup = {
     },
     summon: () => {
         if(State.summonCnt>=4) return;
-        const c = State.cards.splice(Utils.rand(0, State.cards.length-1), 1)[0];
-        State.hand.push(c);
-        
+        const c = State.cards.splice(Utils.rand(0, State.cards.length-1), 1)[0]; State.hand.push(c);
         const el = document.createElement('div'); el.className = `merc-card ${c.rank}`;
-        el.innerHTML = `<div style="color:${c.color}; font-weight:bold;">용병 ${State.summonCnt+1}</div><div>🦶${c.mv} ⚔️${c.at}</div><div>🛡️${c.df} 🍀${c.lk}</div>`;
+        const maxVal = Math.max(c.mv, c.at, c.df, c.lk);
+        const style = (val) => val === maxVal ? 'stat-max' : '';
+        el.innerHTML = `
+            <div class="merc-title" style="color:${c.color};">용병 ${State.summonCnt+1} (${c.rank.toUpperCase()})</div>
+            <div class="merc-stats">
+                <div class="stat-box">🦶 <span class="stat-val ${style(c.mv)}">${c.mv}</span></div>
+                <div class="stat-box">⚔️ <span class="stat-val ${style(c.at)}">${c.at}</span></div>
+                <div class="stat-box">🛡️ <span class="stat-val ${style(c.df)}">${c.df}</span></div>
+                <div class="stat-box">🍀 <span class="stat-val ${style(c.lk)}">${c.lk}</span></div>
+            </div>
+        `;
         document.getElementById('gacha-view').appendChild(el);
-        
-        State.summonCnt++;
-        document.getElementById('btn-summon').innerText = `소환 (${State.summonCnt}/4)`;
-        
-        if(State.summonCnt===4) {
-            setTimeout(() => {
-                document.getElementById('phase-gacha').style.display='none';
-                document.getElementById('phase-place').style.display='flex';
-                Setup.renderHand();
-            }, 800);
-        }
+        State.summonCnt++; document.getElementById('btn-summon').innerText = `소환 (${State.summonCnt}/4)`;
+        if(State.summonCnt===4) { setTimeout(() => { document.getElementById('phase-gacha').style.display='none'; document.getElementById('phase-place').style.display='flex'; Setup.renderHand(); }, 800); }
     },
     renderHand: () => {
         const con = document.getElementById('hand'); con.innerHTML = '';
         State.hand.forEach(c => {
-            const d = document.createElement('div'); d.className='dragger'; d.id=`card-${c.id}`; d.draggable=true;
-            d.style.borderColor = c.color;
-            d.innerHTML = `<div style="color:${c.color}; font-weight:bold;">${c.rank=='legend'?'LEG':(c.rank=='rare'?'RARE':'COM')}</div><div>🦶${c.mv}</div><div>⚔️${c.at}</div>`;
+            const d = document.createElement('div'); d.className='dragger'; d.id=`card-${c.id}`; d.draggable=true; d.style.borderColor = c.color;
+            const maxVal = Math.max(c.mv, c.at, c.df, c.lk);
+            const style = (val) => val === maxVal ? 'color:var(--highlight); font-weight:bold; transform:scale(1.2);' : '';
+            d.innerHTML = `<div style="color:${c.color}; font-weight:bold; font-size:10px;">${c.rank.toUpperCase()}</div><div class="d-stats"><div style="${style(c.mv)}">🦶${c.mv}</div><div style="${style(c.at)}">⚔️${c.at}</div><div style="${style(c.df)}">🛡️${c.df}</div><div style="${style(c.lk)}">🍀${c.lk}</div></div>`;
             d.ondragstart = e => e.dataTransfer.setData('cid', c.id);
-            // Mobile Touch Support
             d.ontouchstart = e => { window.touchCard = c; document.querySelectorAll('.dragger').forEach(x=>x.style.opacity=1); d.style.opacity=0.5; };
             con.appendChild(d);
         });
-        
         document.querySelectorAll('.stat-slot').forEach(s => {
-            s.ondragover = e => e.preventDefault();
-            s.ondrop = e => Setup.place(s, e.dataTransfer.getData('cid'));
-            s.onclick = () => { if(window.touchCard) Setup.place(s, window.touchCard.id); };
+            s.ondragover = e => e.preventDefault(); s.ondrop = e => Setup.place(s, e.dataTransfer.getData('cid')); s.onclick = () => { if(window.touchCard) Setup.place(s, window.touchCard.id); };
         });
     },
     place: (slot, cid) => {
-        const c = State.hand.find(x => x.id == cid);
-        const type = slot.dataset.type;
-        // clear old
+        const c = State.hand.find(x => x.id == cid); const type = slot.dataset.type;
         for(let k in State.slots) if(State.slots[k]===c) State.slots[k]=null;
-        State.slots[type] = c;
-        window.touchCard = null;
-        Setup.updateSlots();
+        State.slots[type] = c; window.touchCard = null; Setup.updateSlots();
     },
     updateSlots: () => {
         document.querySelectorAll('.dragger').forEach(d=>d.classList.remove('placed'));
         for(let k in State.slots) {
-            const c = State.slots[k];
-            const el = document.getElementById(`slot-${k}`);
+            const c = State.slots[k]; const el = document.getElementById(`slot-${k}`);
             el.className = 'stat-slot'; el.innerHTML = `<div class="slot-label">${{move:'이동',atk:'공격',def:'방어',luck:'운'}[k]}</div><div class="slot-val">-</div>`;
-            if(c) {
-                document.getElementById(`card-${c.id}`).classList.add('placed');
-                el.classList.add('filled'); el.style.borderColor=c.color;
-                const val = k==='move'?c.mv : (k==='atk'?c.at : (k==='def'?c.df : c.lk));
-                el.innerHTML = `<div class="slot-label" style="color:${c.color}">${c.rank}</div><div class="slot-val" style="color:${c.color}">${val}</div>`;
-            }
+            if(c) { document.getElementById(`card-${c.id}`).classList.add('placed'); el.classList.add('filled'); el.style.borderColor=c.color; const val = k==='move'?c.mv : (k==='atk'?c.at : (k==='def'?c.df : c.lk)); el.innerHTML = `<div class="slot-label" style="color:${c.color}">${c.rank}</div><div class="slot-val" style="color:${c.color}; font-size:24px;">${val}</div>`; }
         }
     },
     finish: () => {
         if(!Object.values(State.slots).every(x=>x)) return alert("모든 슬롯을 채워주세요.");
-        const s = State.slots;
-        State.p1.stats = { move:s.move.mv, atk:s.atk.at, def:s.def.df, luck:s.luck.lk };
-        
-        // P2 Stats (Remaining Logic)
+        const s = State.slots; State.p1.stats = { move:s.move.mv, atk:s.atk.at, def:s.def.df, luck:s.luck.lk };
         let pool = []; for(let i=0; i<4; i++) pool.push(State.cards[Utils.rand(0, State.cards.length-1)]);
         State.p2.stats = { move:pool[0].mv, atk:pool[1].at, def:pool[2].df, luck:pool[3].lk };
-
-        document.getElementById('screen-setup').style.display='none';
-        document.getElementById('screen-game').style.display='flex';
-        Logic.initBoard();
-        Logic.startTurn();
+        document.getElementById('screen-setup').style.display='none'; document.getElementById('screen-game').style.display='flex';
+        Logic.initBoard(); Logic.startTurn();
     }
 };
 
-/* ------------------------------------------------------------------
-   GAME ACTIONS
------------------------------------------------------------------- */
 const Game = {
     toggleCamera: () => {
         State.cameraLocked = !State.cameraLocked;
@@ -885,33 +713,17 @@ const Game = {
             p.pos++; UI.update(); Utils.centerCam(p.pos);
             await Utils.wait(200);
             
-            // Interaction Check
             const enemy = isAi ? State.p1 : State.p2;
-            if(p.pos === enemy.pos && p.pos!==0 && p.pos!==49 && !State.aiMerged) {
-                return Logic.battle(p, enemy, Logic.endTurn);
-            }
-            if(State.monsters[p.pos]) {
-                return Logic.battle(p, null, Logic.endTurn);
-            }
-            if(!isAi && p.pos!==49 && p.pos!==25) { // AI skips events
-               await Logic.handleEvent(p);
-            }
+            if(p.pos === enemy.pos && p.pos!==0 && p.pos!==49 && !State.aiMerged) { return Logic.battle(p, enemy, Logic.endTurn); }
+            if(State.monsters[p.pos]) { return Logic.battle(p, null, Logic.endTurn); }
+            if(!isAi && p.pos!==49 && p.pos!==25) { await Logic.handleEvent(p); }
         }
         
         if(p.pos === 49) {
-            if(isAi) {
-                State.aiMerged = true; State.boss.hp*=2; State.boss.maxHp*=2; 
-                State.limitTurn=5; Utils.float(49, "보스합체!", "red");
-                alert("추격자가 마왕과 합체했습니다! 5턴 내에 처치하세요!");
-                Logic.endTurn();
-            } else {
-                return Logic.battle(p, null, Logic.endTurn, true);
-            }
-        } else if(p.pos===25 && !isAi && !p.subJob) {
-            Logic.handleEvent(p);
-        } else {
-            Logic.endTurn();
-        }
+            if(isAi) { State.aiMerged = true; State.boss.hp*=2; State.boss.maxHp*=2; State.limitTurn=5; Utils.float(49, "보스합체!", "red"); alert("추격자가 마왕과 합체했습니다! 5턴 내에 처치하세요!"); Logic.endTurn(); } 
+            else { return Logic.battle(p, null, Logic.endTurn, true); }
+        } else if(p.pos===25 && !isAi && !p.subJob) { Logic.handleEvent(p); } 
+        else { Logic.endTurn(); }
     },
     usePotion: () => {
         if(State.turn!=='P1' || State.p1.pot<=0 || State.isMoving) return;
@@ -922,13 +734,8 @@ const Game = {
     onSkillBtnClick: () => {
         if(State.p1.subJob && State.p1.subJob.type === 'active') {
             if(State.p1.skillCD > 0) return alert(`쿨타임: ${State.p1.skillCD}턴`);
-            if(confirm(`${State.p1.subJob.sn} 사용하시겠습니까?`)) {
-                State.p1.activeSkill = true; State.p1.skillCD = State.p1.subJob.cd;
-                Utils.float(State.p1.pos, "⚡스킬 장전", "yellow");
-            }
-        } else {
-            alert("액티브 스킬이 없습니다 (전직 필요)");
-        }
+            if(confirm(`${State.p1.subJob.sn} 사용하시겠습니까?`)) { State.p1.activeSkill = true; State.p1.skillCD = State.p1.subJob.cd; Utils.float(State.p1.pos, "⚡스킬 장전", "yellow"); }
+        } else { alert("액티브 스킬이 없습니다 (전직 필요)"); }
     }
 };
 
@@ -936,31 +743,36 @@ const Shop = {
     open: () => {
         if(State.turn!=='P1') return;
         const list = document.getElementById('shop-list'); list.innerHTML='';
-        ITEMS.forEach(it => {
-            const d = document.createElement('div');
-            d.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:#21262d; padding:10px; margin-bottom:5px; border-radius:6px;";
+        const addShopItem = (name, type, val, cost, iconKey) => {
+            const d = document.createElement('div'); d.className='shop-item';
             d.innerHTML = `
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <div style="font-size:24px;">${it.icon}</div>
-                    <div><div style="color:white; font-size:13px; font-weight:bold;">${it.n}</div><div style="color:#888; font-size:11px;">${it.type.toUpperCase()} +${it.val}</div></div>
+                <div class="shop-img-box">${getIcon(name)}</div>
+                <div class="shop-info">
+                    <div style="color:white; font-size:13px; font-weight:bold;">${name}</div>
+                    <div style="color:#888; font-size:11px;">${type}</div>
                 </div>
-                <button class="btn-main" style="width:60px; padding:5px; font-size:12px; margin:0;" onclick="Shop.buy('${it.n}')">${it.cost}</button>
+                <button class="btn-main" style="width:60px; padding:5px; font-size:12px; margin:0;" onclick="Shop.buy('${name}')">${cost}</button>
             `;
             list.appendChild(d);
-        });
+        };
+        addShopItem("회복 물약", "HP +50", 0, 50, "potion");
+        addShopItem("랜덤 강화", "스탯 +1", 0, 100, "upgrade");
+        ITEMS.forEach(it => addShopItem(it.n, it.type.toUpperCase()+` +${it.val}`, it.val, it.cost, it.n));
         document.getElementById('modal-shop').style.display='flex';
     },
     close: () => document.getElementById('modal-shop').style.display='none',
     buy: (n) => {
-        const it = ITEMS.find(x=>x.n===n);
-        if(State.p1.gold >= it.cost) {
-            State.p1.gold -= it.cost; State.p1.equip[it.type] = it;
-            UI.update(); Utils.float(State.p1.pos, "구매완료", "lime");
+        const cost = n==="회복 물약"?50 : (n==="랜덤 강화"?100 : ITEMS.find(x=>x.n===n).cost);
+        if(State.p1.gold >= cost) {
+            State.p1.gold -= cost;
+            if(n==="회복 물약") { State.p1.pot++; Utils.float(State.p1.pos, "+물약", "pink"); }
+            else if(n==="랜덤 강화") { State.p1.stats[['move','atk','def','luck'][Utils.rand(0,3)]]++; Utils.float(State.p1.pos, "강화성공", "lime"); }
+            else { const it = ITEMS.find(x=>x.n===n); State.p1.equip[it.type] = it; Utils.float(State.p1.pos, "장착완료", "cyan"); }
+            UI.update();
         } else alert("골드가 부족합니다.");
     }
 };
 
-// Start Game
 Setup.init();
 </script>
 </body>
