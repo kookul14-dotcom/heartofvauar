@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>RPG Board: Final Complete</title>
+<title>RPG Board: Final Master</title>
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
     /* -------------------------------------------
@@ -50,33 +50,47 @@
     .player-hud-grid { display: flex; gap: 5px; height: 120px; }
     .p-panel { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: border-color 0.3s; }
     .p-panel.active-turn { border: 1px solid var(--gold); box-shadow: inset 0 0 10px rgba(242, 204, 96, 0.1); }
+    
     .char-header { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
     .char-icon { width: 30px; height: 30px; background: #21262d; border-radius: 4px; display:flex; align-items:center; justify-content:center; font-size:16px; border: 1px solid #30363d; overflow: hidden; }
     .char-icon img { width: 100%; height: 100%; object-fit: contain; }
     .char-info { display: flex; flex-direction: column; flex: 1; }
     .char-name { font-size: 12px; font-weight: bold; color: var(--text-color); line-height: 1.1; }
     .char-job { font-size: 10px; color: #8b949e; }
+    
     .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 4px; font-size: 10px; color: #c9d1d9; margin-bottom: 2px; }
     .s-item { display: flex; align-items: center; gap: 2px; }
     .s-val { color: var(--text-color); font-family: 'Do Hyeon'; letter-spacing: 0.5px; }
+    .s-bonus { color: var(--highlight); font-size: 0.9em; margin-left: 2px; }
+
     .equip-tray { display: flex; gap: 2px; flex-wrap: wrap; margin-top: auto; }
     .eq-slot { width: 16px; height: 16px; background: #0d1117; border: 1px solid #30363d; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #484f58; overflow:hidden; }
     .eq-slot.filled { border-color: #8b949e; color: #fff; }
     .art-slot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:9px; background:#342a08; }
+
     .boss-bar-wrap { height: 20px; background: #222; border: 1px solid #dba6a6; position: relative; border-radius: 4px; overflow: hidden; margin-top: 2px; }
     .boss-hp-fill { height: 100%; background: #da3633; width: 100%; transition: width 0.3s; }
     .boss-text { position:absolute; width:100%; text-align:center; top:0; font-size:11px; color:white; font-weight:bold; line-height:20px; text-shadow:1px 1px 1px black; }
 
     /* Board */
     #board-container { flex: 1; overflow-x: auto; overflow-y: hidden; background: #010409; position: relative; }
-    #grid { display: grid; grid-template-columns: repeat(50, 1fr); height: 100%; width: 3200px; padding-bottom: 80px; align-items: end; background: url('images/map_bg.png') center/cover no-repeat; }
+    #grid { display: grid; grid-template-columns: repeat(50, 1fr); height: 100%; width: 3200px; padding-bottom: 80px; align-items: end; background: url('https://raw.githubusercontent.com/kookul14-dotcom/heartofvauar/refs/heads/main/images/map_bg.png') center/cover no-repeat; }
     .tile { height: 60px; position: relative; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #21262d; font-size: 10px; color: #555; }
-    .tile-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; position: absolute; bottom: 0; z-index: 0; }
+    .tile-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; position: absolute; bottom: 0; z-index: 0; }
     .tile-txt { z-index: 1; text-shadow: 1px 1px 2px black; font-weight: bold; position: relative; }
-    .pawn, .obj-wrap { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 1px; height: 1px; z-index: 20; pointer-events: none; display: flex; justify-content: center; align-items: flex-end; }
+    
+    .pawn, .obj-wrap { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 1px; height: 1px; z-index: 20; pointer-events: none; display: flex; justify-content: center; align-items: flex-end; }
     .game-img-asset { width: 80px; height: 80px; object-fit: contain; animation: breath 2s infinite ease-in-out; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.7)); }
 
-    /* Modals & Setup */
+    /* Controls */
+    #controls { background: #161b22; border-top: 1px solid #30363d; padding: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
+    .ctrl-row { display: flex; gap: 8px; height: 45px; }
+    .c-btn { flex: 1; background: #21262d; border: 1px solid #30363d; color: #c9d1d9; border-radius: 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+    .c-btn.active { border-color: var(--gold); background: #342a08; color: var(--gold); }
+    .roll-btn { background: var(--p1-color); color: white; font-size: 20px; border-radius: 6px; height: 50px; font-weight: bold; box-shadow: 0 4px 0 #1b6629; margin-bottom: 5px; }
+    .roll-btn:disabled { background: #333; box-shadow: none; color: #555; }
+
+    /* Modals */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; display: none; align-items: center; justify-content: center; }
     .modal-box { width: 90%; max-width: 380px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
     
@@ -119,19 +133,12 @@
     .shop-img-box img { width: 100%; height: 100%; object-fit: contain; }
     .shop-info { flex: 1; }
 
-    #controls { background: #161b22; border-top: 1px solid #30363d; padding: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
-    .ctrl-row { display: flex; gap: 8px; height: 45px; }
-    .c-btn { flex: 1; background: #21262d; border: 1px solid #30363d; color: #c9d1d9; border-radius: 6px; font-size: 11px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
-    .c-btn.active { border-color: var(--gold); background: #342a08; color: var(--gold); }
-    .roll-btn { background: var(--p1-color); color: white; font-size: 20px; border-radius: 6px; height: 50px; font-weight: bold; box-shadow: 0 4px 0 #1b6629; margin-bottom: 5px; }
-    .roll-btn:disabled { background: #333; box-shadow: none; color: #555; }
-
     .class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
     .class-card { background: #21262d; border: 1px solid #30363d; border-radius: 8px; padding: 10px; text-align: center; }
     .slot-container { display: flex; justify-content: space-around; gap: 5px; margin-bottom: 10px; }
     .stat-slot { width: 70px; height: 90px; background: #0d1117; border: 2px dashed #30363d; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; color: #8b949e; position: relative; }
     .stat-slot.filled { border-style: solid; background: #1f2428; }
-    .choice-btn { width: 100%; padding: 10px; background: #21262d; border: 1px solid #30363d; color: white; border-radius: 6px; margin-bottom: 5px; text-align: left; }
+    .choice-btn { width: 100%; padding: 10px; background: #21262d; border: 1px solid #30363d; color: white; border-radius: 6px; margin-bottom: 5px; text-align: left; display:flex; align-items:center; gap:8px; }
 </style>
 </head>
 <body>
@@ -208,7 +215,6 @@
 /* ------------------------------------------------------------------
    [CONFIG] Image Sources
    ------------------------------------------------------------------ */
-// ⚠️ 중요: 깃허브 주소의 '파일 이름 앞부분'까지만 넣으세요.
 const GITHUB_URL = "https://raw.githubusercontent.com/kookul14-dotcom/heartofvauar/refs/heads/main/images/"; 
 
 const IMG_FILE_NAMES = {
@@ -228,13 +234,21 @@ const IMG_FILE_NAMES = {
     lich:'lich.png', dragon:'dragon.png', boss:'boss.png', enemy:'enemy.png',
     // 타일
     tile_fire:"tile_fire.png", tile_ice:"tile_ice.png", tile_heal:"tile_heal.png", tile_box:"tile_box.png",
+    tile_seal:"tile_seal.png", tile_job:"tile_job.png",
     // 아이템
     "가죽 부츠":"boots_leather.png", "바람의 신발":"boots_wind.png", "헤르메스 부츠":"boots_hermes.png",
     "녹슨 검":"sword_rusty.png", "기사의 검":"sword_knight.png", "마법 지팡이":"staff_magic.png",
     "미스릴 검":"sword_mithril.png",
     "가죽 갑옷":"armor_leather.png", "판금 갑옷":"armor_plate.png", "성기사의 방패":"shield_paladin.png", "용의 비늘":"armor_dragon.png",
     "행운 부적":"acc_charm.png", "황금 반지":"acc_goldring.png",
-    "회복 물약":"potion.png", "랜덤 강화":"upgrade.png"
+    "회복 물약":"potion.png", "랜덤 강화":"upgrade.png",
+    // 스킬
+    skill_berserk:"skill_fury.png", skill_divine:"skill_divine.png",
+    skill_iron:"skill_iron.png", skill_revenge:"skill_revenge.png",
+    skill_vital:"skill_vital.png", skill_shadow:"skill_shadow.png",
+    skill_weak:"skill_weakness.png", skill_wind:"skill_wind.png",
+    skill_meteor:"skill_meteor.png", skill_soul:"skill_soul.png",
+    skill_poison:"skill_poison.png", skill_path:"skill_shortcut.png"
 };
 
 const MON_KEY_MAP = {
@@ -247,11 +261,12 @@ const EMOJI_BACKUP = {
     berserker:'🩸', paladin:'⛪', guardian:'🏰', avenger:'💢', assassin:'👻', phantom:'🌫️', sniper:'🎯', ranger:'🍃', archmage:'⚡', warlock:'💀', alchemist:'⚗️', pathfinder:'🗺️',
     monster:'👹', boss:'👿', enemy:'👺',
     tile_fire:'🔥', tile_ice:'❄️', tile_heal:'💧', tile_box:'📦',
+    tile_seal:'💎', tile_job:'👑',
     "회복 물약":'🧪', "랜덤 강화":'🎲'
 };
 
 const getIcon = (key) => {
-    if (GITHUB_URL && GITHUB_URL.length > 10 && IMG_FILE_NAMES[key]) {
+    if (GITHUB_URL && IMG_FILE_NAMES[key]) {
         return `<img src="${GITHUB_URL}${IMG_FILE_NAMES[key]}" style="width:100%; height:100%; object-fit:contain;" onerror="this.parentNode.innerHTML='${EMOJI_BACKUP[key]||'❓'}'">`;
     }
     return EMOJI_BACKUP[key] || '❓';
@@ -266,18 +281,18 @@ const CLASSES = {
     mage: {n:'마법사', desc:'체력-20, 공격+3'}, explorer: {n:'탐험가', desc:'이동+2, 물약+2'}
 };
 const JOBS = {
-    warrior: [ {id:'berserker', n:'광전사', sn:'피의 격노', desc:'HP 소모하여 공격력 2배', type:'passive'}, {id:'paladin', n:'성기사', sn:'신의 가호', desc:'매 턴 체력 회복', type:'passive'} ],
-    knight: [ {id:'guardian', n:'가디언', sn:'철벽 방어', desc:'받는 피해 -3', type:'passive'}, {id:'avenger', n:'어벤져', sn:'복수의 칼날', desc:'방어시 데미지 반사', type:'passive'} ],
-    rogue: [ {id:'assassin', n:'어쌔신', sn:'급소 가격', desc:'운 수치만큼 공격력 추가', type:'passive'}, {id:'phantom', n:'팬텀', sn:'그림자 망토', desc:'30% 확률로 완전 회피', type:'passive'} ],
-    hunter: [ {id:'sniper', n:'스나이퍼', sn:'약점 포착', desc:'방어력 50% 관통', type:'passive'}, {id:'ranger', n:'레인저', sn:'바람의 사격', desc:'이동거리만큼 공격력 추가', type:'passive'} ],
-    mage: [ {id:'archmage', n:'대마법사', sn:'메테오', desc:'고정 피해 20 (쿨타임 3)', type:'active', cd:3}, {id:'warlock', n:'흑마법사', sn:'영혼 착취', desc:'골드 소모 추가 피해', type:'passive'} ],
-    explorer: [ {id:'alchemist', n:'연금술사', sn:'독성 투척', desc:'물약 사용 시 적에게 독뎀', type:'passive'}, {id:'pathfinder', n:'개척자', sn:'지름길', desc:'이동 최소값 4 보장', type:'passive'} ]
+    warrior: [ {id:'berserker', n:'광전사', sn:'피의 격노', desc:'HP 소모하여 공격력 2배', type:'passive', icon:'skill_berserk'}, {id:'paladin', n:'성기사', sn:'신의 가호', desc:'매 턴 체력 회복', type:'passive', icon:'skill_divine'} ],
+    knight: [ {id:'guardian', n:'가디언', sn:'철벽 방어', desc:'받는 피해 -3', type:'passive', icon:'skill_iron'}, {id:'avenger', n:'어벤져', sn:'복수의 칼날', desc:'방어시 데미지 반사', type:'passive', icon:'skill_revenge'} ],
+    rogue: [ {id:'assassin', n:'어쌔신', sn:'급소 가격', desc:'운 수치만큼 공격력 추가', type:'passive', icon:'skill_vital'}, {id:'phantom', n:'팬텀', sn:'그림자 망토', desc:'30% 확률로 완전 회피', type:'passive', icon:'skill_shadow'} ],
+    hunter: [ {id:'sniper', n:'스나이퍼', sn:'약점 포착', desc:'방어력 50% 관통', type:'passive', icon:'skill_weak'}, {id:'ranger', n:'레인저', sn:'바람의 사격', desc:'이동거리만큼 공격력 추가', type:'passive', icon:'skill_wind'} ],
+    mage: [ {id:'archmage', n:'대마법사', sn:'메테오', desc:'고정 피해 20 (쿨타임 3)', type:'active', cd:3, icon:'skill_meteor'}, {id:'warlock', n:'흑마법사', sn:'영혼 착취', desc:'골드 소모 추가 피해', type:'passive', icon:'skill_soul'} ],
+    explorer: [ {id:'alchemist', n:'연금술사', sn:'독성 투척', desc:'물약 사용 시 적에게 독뎀', type:'passive', icon:'skill_poison'}, {id:'pathfinder', n:'개척자', sn:'지름길', desc:'이동 최소값 4 보장', type:'passive', icon:'skill_path'} ]
 };
 const ITEMS = [
-    {n:"가죽 부츠", type:"s", val:1, cost:50, rank:0}, {n:"바람의 신발", type:"s", val:2, cost:100, rank:1}, {n:"헤르메스 부츠", type:"s", val:4, cost:220, rank:2},
-    {n:"녹슨 검", type:"w", val:2, cost:50, rank:0}, {n:"기사의 검", type:"w", val:4, cost:120, rank:1}, {n:"마법 지팡이", type:"w", val:6, cost:200, rank:2}, {n:"미스릴 검", type:"w", val:7, cost:250, rank:3},
-    {n:"가죽 갑옷", type:"a", val:2, cost:50, rank:0}, {n:"판금 갑옷", type:"a", val:4, cost:120, rank:1}, {n:"성기사의 방패", type:"a", val:8, cost:300, rank:2}, {n:"용의 비늘", type:"a", val:6, cost:200, rank:2},
-    {n:"행운 부적", type:"acc", val:2, cost:80, rank:1}, {n:"황금 반지", type:"acc", val:4, cost:150, rank:2}
+    {n:"가죽 부츠", type:"s", val:1, cost:50, icon:"👟", rank:0}, {n:"바람의 신발", type:"s", val:2, cost:100, icon:"👟", rank:1}, {n:"헤르메스 부츠", type:"s", val:4, cost:220, icon:"👟", rank:2},
+    {n:"녹슨 검", type:"w", val:2, cost:50, icon:"⚔️", rank:0}, {n:"기사의 검", type:"w", val:4, cost:120, icon:"⚔️", rank:1}, {n:"마법 지팡이", type:"w", val:6, cost:200, icon:"🔮", rank:2}, {n:"미스릴 검", type:"w", val:7, cost:250, icon:"⚔️", rank:3},
+    {n:"가죽 갑옷", type:"a", val:2, cost:50, icon:"🛡️", rank:0}, {n:"판금 갑옷", type:"a", val:4, cost:120, icon:"🛡️", rank:1}, {n:"성기사의 방패", type:"a", val:8, cost:300, icon:"🛡️", rank:2}, {n:"용의 비늘", type:"a", val:6, cost:200, icon:"🛡️", rank:2},
+    {n:"행운 부적", type:"acc", val:2, cost:80, icon:"💍", rank:1}, {n:"황금 반지", type:"acc", val:4, cost:150, icon:"💍", rank:2}
 ];
 const ARTIFACTS = [ {id:'vamp', n:'흡혈', icon:'🩸'}, {id:'thorn', n:'반사', icon:'🌵'}, {id:'greed', n:'탐욕', icon:'💰'}, {id:'glass', n:'유리', icon:'🍷'}, {id:'boots', n:'신발', icon:'👞'}, {id:'lucky', n:'행운', icon:'🍀'} ];
 const MONSTERS = ["슬라임","고블린","오크","스켈레톤","좀비","트롤","골렘","가고일","리치","드래곤"];
@@ -332,42 +347,64 @@ const Logic = {
     initBoard: () => {
         const g = document.getElementById('grid'); g.innerHTML='';
         let normalTiles = [];
+        
         for(let i=0; i<50; i++){
             const d=document.createElement('div'); d.className='tile'; d.id=`tile-${i}`;
-            let content = `<span class="tile-txt">${i===0?'START':(i===49?'BOSS':i)}</span>`;
+            let content = ``;
             let type = '';
-            if(i===0) d.classList.add('tile-start');
-            else if(i===49) d.classList.add('tile-end');
-            else if(i===25) { d.classList.add('tile-job'); content = `<span class="tile-txt">👑<br>전직</span>`; }
-            else if(State.activeSeals.includes(i)) { d.classList.add('tile-seal'); content = `<span class="tile-txt">💎<br>봉인</span>`; }
+
+            if(i===0) { d.classList.add('tile-start'); content='<span class="tile-txt">START</span>'; }
+            else if(i===49) { d.classList.add('tile-end'); content='<span class="tile-txt">BOSS</span>'; }
+            else if(i===25) { 
+                d.classList.add('tile-job'); 
+                const icon = getIcon('tile_job');
+                if(icon.includes('<img')) content = `<div class="tile-img">${icon}</div>`;
+                else content = `<span class="tile-txt">👑<br>전직</span>`; 
+            }
+            else if(State.activeSeals.includes(i)) { 
+                d.classList.add('tile-seal'); 
+                const icon = getIcon('tile_seal');
+                if(icon.includes('<img')) content = `<div class="tile-img">${icon}</div>`;
+                else content = `<span class="tile-txt">💎<br>봉인</span>`; 
+            }
             else {
                 const r = Math.random();
-                if(r<0.05) type = 'tile_fire'; else if(r<0.10) type = 'tile_ice'; else if(r<0.15) type = 'tile_heal';
+                if(r<0.05) type = 'tile_fire';
+                else if(r<0.10) type = 'tile_ice';
+                else if(r<0.15) type = 'tile_heal';
+                
                 if(type) {
-                    d.classList.add(type); const icon = getIcon(type);
-                    if(icon.includes('<img')) content = `<div class="tile-img">${icon}</div>`; else content = `<span class="tile-txt">${icon}</span>`;
-                } else normalTiles.push(i);
+                    d.classList.add(type);
+                    const icon = getIcon(type);
+                    if(icon.includes('<img')) content = `<div class="tile-img">${icon}</div>`;
+                    else content = `<span class="tile-txt">${icon}</span>`;
+                } else {
+                    normalTiles.push(i);
+                }
             }
-            d.innerHTML = content; g.appendChild(d);
+            d.innerHTML = content;
+            g.appendChild(d);
         }
-        // [Hidden Box Logic] 50% of Normal Tiles
-        Utils.rand(0,0); normalTiles.sort(()=>Math.random()-0.5);
+
+        Utils.rand(0,0); normalTiles.sort(() => Math.random() - 0.5);
         const boxCount = Math.floor(normalTiles.length * 0.5);
         for(let k=0; k<boxCount; k++) {
-            const idx = normalTiles[k]; const t = document.getElementById(`tile-${idx}`);
+            const idx = normalTiles[k];
+            const t = document.getElementById(`tile-${idx}`);
             t.classList.add('tile_box'); 
-            const icon = getIcon('tile_box');
-            if(icon.includes('<img')) t.innerHTML = `<div class="tile-img">${icon}</div>`; else t.innerHTML = `<span class="tile-txt">📦</span>`;
         }
-        // Monsters
+
+        // Monsters Scaling
         [4,8,12,16,21,26,32,36,41,46].forEach((pos, idx) => {
             const mn = MONSTERS[idx]; State.monsters[pos] = { name: mn, mn: MON_STATS[idx].mn, mx: MON_STATS[idx].mx };
             const m = document.createElement('div'); m.className='obj-wrap';
-            m.innerHTML = `<div class="game-img-asset">${getIcon(MON_KEY_MAP[mn])}</div>`; 
+            // Scale based on index
+            const scale = 1 + (idx * 0.15);
+            m.innerHTML = `<div class="game-img-asset" style="transform: scale(${scale}); transform-origin: bottom center;">${getIcon(MON_KEY_MAP[mn])}</div>`; 
             document.getElementById(`tile-${pos}`).appendChild(m);
         });
         const boss = document.createElement('div'); boss.className='obj-wrap';
-        boss.innerHTML = `<div class="game-img-asset" style="width:120px; height:120px;">${getIcon('boss')}</div>`;
+        boss.innerHTML = `<div class="game-img-asset" style="width:140px; height:140px;">${getIcon('boss')}</div>`;
         document.getElementById('tile-49').appendChild(boss);
         UI.update(); Utils.centerCam(0);
     },
@@ -392,7 +429,8 @@ const Logic = {
             document.getElementById('p1-panel').classList.remove('active-turn'); document.getElementById('p2-panel').classList.add('active-turn');
             document.getElementById('btn-roll').disabled = true;
             State.p2.gold += 10;
-            setTimeout(Logic.aiTurn, 800);
+            // AI Turn Fix: Ensure distinct phase
+            setTimeout(Logic.aiTurn, 1000);
         }
         UI.update();
     },
@@ -532,7 +570,7 @@ const Logic = {
                     let msg = "";
                     if(r < 30) { // Equip
                         let rank=0; const r2=Math.random()*100;
-                        if(r2<50) rank=0; else if(r2<80) rank=1; else if(r2<95) rank=2; else rank=3; // Common, Uncommon, Rare, Legend (NEW)
+                        if(r2<50) rank=0; else if(r2<80) rank=1; else if(r2<95) rank=2; else rank=3; 
                         const pool = ITEMS.filter(i=>i.rank===rank);
                         const it = pool[Utils.rand(0, pool.length-1)] || ITEMS[0];
                         p.equip[it.type] = it; msg = `<span style="color:lime">${it.n} 획득!</span>`;
@@ -552,17 +590,17 @@ const Logic = {
                     t.classList.remove('tile_box'); 
                     // Update visual to show opened
                     const icon = getIcon('tile_box'); 
-                    if(!icon.includes('<img')) t.innerHTML = `<span class="tile-txt" style="color:#555">📭</span>`; // Empty
+                    if(icon.includes('<img')) t.innerHTML = `<div class="tile-img" style="filter:grayscale(1); opacity:0.5">${icon}</div>`; else t.innerHTML = `<span class="tile-txt" style="color:#555">📭</span>`; 
                     setTimeout(() => { Utils.closePopup(); resolve(); }, 1200);
                 };
                 document.getElementById('box-pass').onclick = () => { Utils.closePopup(); resolve(); };
             }
             else if(p.pos === 25 && p.id === 'P1' && !p.subJob) {
-                const choices = JOBS[p.job].map(j => `<button class="choice-btn" onclick="Logic.jobChange('${j.id}')"><b>${j.n}</b><br><span style="font-size:10px">${j.desc}</span></button>`).join('');
+                const choices = JOBS[p.job].map(j => `<button class="choice-btn" onclick="Logic.jobChange('${j.id}')"><div style="width:30px;">${getIcon(j.icon)}</div><div><b>${j.n}</b><br><span style="font-size:10px">${j.desc}</span></div></button>`).join('');
                 Utils.popup(`<h3 style="color:var(--gold); text-align:center;">전직소</h3>${choices}`);
             }
             else if(State.activeSeals.includes(p.pos)) {
-                State.activeSeals = State.activeSeals.filter(s => s!==p.pos); t.classList.remove('tile-seal'); t.innerHTML = `<span class="tile-txt">${p.pos}</span>`;
+                State.activeSeals = State.activeSeals.filter(s => s!==p.pos); t.classList.remove('tile-seal'); t.innerHTML = ``;
                 if(p.id==='P1') {
                     State.boss.hp = Math.floor(State.boss.hp*0.8);
                     const art = ARTIFACTS[Utils.rand(0, ARTIFACTS.length-1)]; p.artifacts.push(art);
@@ -593,14 +631,29 @@ const UI = {
         makePawn(State.p1, 'p1', p1Icon); if(!State.aiMerged) makePawn(State.p2, 'p2', getIcon('enemy'));
 
         const renStats = (p, elId) => {
-            const el = document.getElementById(elId); const s = Logic.getStats(p);
+            const el = document.getElementById(elId); 
+            // Calculate base and current total for diff display
+            const baseStats = p.stats;
+            const curStats = Logic.getStats(p);
+            
+            // Helper to show bonus text
+            const fmt = (base, min, max) => {
+                const bonus = max - (base); // Approximate bonus based on max diff
+                return `${min}~${max} ${bonus>0 ? `<span class="s-bonus">(+${bonus})</span>` : ''}`;
+            };
+
             const icon = p.id === 'P1' ? p1Icon : getIcon('enemy');
             const jobName = p.id === 'P1' ? (p.subJob ? p.subJob.n : CLASSES[p.job].n) : '추격자';
             let artsHtml = ''; if(p.id==='P1') artsHtml = p.artifacts.map(a => `<div class="art-slot">${a.icon}</div>`).join('');
             el.innerHTML = `
                 <div class="char-header"><div class="char-icon">${icon}</div><div class="char-info"><div class="char-name">${p.name}</div><div class="char-job">${jobName}</div></div></div>
                 <div class="hp-bar-sm"><div class="hp-fill-sm" style="width:${(p.hp/p.maxHp)*100}%; background:${p.id==='P1'?'var(--p1-color)':'var(--p2-color)'}"></div></div>
-                <div class="stats-row"><div class="s-item">🦶<span class="s-val">${s.mvMin}~${s.mvMax}</span></div><div class="s-item">⚔️<span class="s-val">${s.atMin}~${s.atMax}</span></div><div class="s-item">🛡️<span class="s-val">${s.dfMin}~${s.dfMax}</span></div><div class="s-item">🍀<span class="s-val">${s.lkMin}~${s.lkMax}</span></div></div>
+                <div class="stats-row">
+                    <div class="s-item">🦶<span class="s-val">${fmt(baseStats.move, curStats.mvMin, curStats.mvMax)}</span></div>
+                    <div class="s-item">⚔️<span class="s-val">${fmt(baseStats.atk, curStats.atMin, curStats.atMax)}</span></div>
+                    <div class="s-item">🛡️<span class="s-val">${fmt(baseStats.def, curStats.dfMin, curStats.dfMax)}</span></div>
+                    <div class="s-item">🍀<span class="s-val">${fmt(baseStats.luck, curStats.lkMin, curStats.lkMax)}</span></div>
+                </div>
                 <div class="equip-tray"><div class="eq-slot ${p.equip.s?'filled':''}">${p.equip.s?getIcon(p.equip.s.n):'👟'}</div><div class="eq-slot ${p.equip.w?'filled':''}">${p.equip.w?getIcon(p.equip.w.n):'⚔️'}</div><div class="eq-slot ${p.equip.a?'filled':''}">${p.equip.a?getIcon(p.equip.a.n):'🛡️'}</div><div class="eq-slot ${p.equip.acc?'filled':''}">${p.equip.acc?getIcon(p.equip.acc.n):'💍'}</div>${artsHtml}</div>
             `;
         };
@@ -677,7 +730,11 @@ const Setup = {
         for(let k in State.slots) {
             const c = State.slots[k]; const el = document.getElementById(`slot-${k}`);
             el.className = 'stat-slot'; el.innerHTML = `<div class="slot-label">${{move:'이동',atk:'공격',def:'방어',luck:'운'}[k]}</div><div class="slot-val">-</div>`;
-            if(c) { document.getElementById(`card-${c.id}`).classList.add('placed'); el.classList.add('filled'); el.style.borderColor=c.color; const val = k==='move'?c.mv : (k==='atk'?c.at : (k==='def'?c.df : c.lk)); el.innerHTML = `<div class="slot-label" style="color:${c.color}">${c.rank}</div><div class="slot-val" style="color:${c.color}; font-size:24px;">${val}</div>`; }
+            if(c) { 
+                document.getElementById(`card-${c.id}`).classList.add('placed'); el.classList.add('filled'); el.style.borderColor=c.color; 
+                const val = k==='move'?c.mv : (k==='atk'?c.at : (k==='def'?c.df : c.lk)); 
+                el.innerHTML = `<div class="slot-label" style="color:${c.color}">${c.rank}</div><div class="slot-val" style="color:${c.color}; font-size:24px;">${val}</div>`; 
+            }
         }
     },
     finish: () => {
@@ -777,4 +834,3 @@ Setup.init();
 </script>
 </body>
 </html>
-
