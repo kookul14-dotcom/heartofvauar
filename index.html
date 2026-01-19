@@ -42,9 +42,9 @@
     
     .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 4px; font-size: 11px; color: #fff; }
     .s-item { display: flex; align-items: center; gap: 3px; }
-    .s-val { color: #8b949e; font-family: 'Do Hyeon'; letter-spacing: 0.5px; }
+    .s-val { color: #8b949e; font-family: 'Do Hyeon'; letter-spacing: -0.5px; white-space: nowrap; }
     .s-val strong { color: #fff; }
-    .s-bonus { color: var(--highlight); font-weight: bold; }
+    .s-bonus { color: var(--highlight); font-weight: bold; font-size: 0.85em; }
     .s-min-up { color: #39d353 !important; font-weight: bold; }
     .s-down { color: #da3633 !important; font-weight: bold; }
 
@@ -1051,3 +1051,4 @@ window.onload = () => { Setup.init(); };
 </script>
 </body>
 </html>
+
